@@ -1,0 +1,143 @@
+name: Validate CamCore Open WebUI deployment
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "deploy/camcore/**"
+      - ".github/workflows/camcore-deployment.yml"
+  push:
+    branches: [main]
+    paths:
+      - "deploy/camcore/**"
+      - ".github/workflows/camcore-deployment.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: camcore-open-webui-deployment-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  validate:
+    name: Validate production contract
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Render production compose
+        env:
+          CAMCORE_AI_MICROSOFT_TENANT_ID: ci-tenant
+          CAMCORE_AI_MICROSOFT_CLIENT_ID: ci-client
+          CAMCORE_AI_MICROSOFT_CLIENT_SECRET: ci-client-secret
+          CAMCORE_AI_WEBUI_SECRET_KEY: ci-webui-secret-00000000000000000000000000000000
+          CAMCORE_AI_OAUTH_SESSION_TOKEN_ENCRYPTION_KEY: ci-session-secret-000000000000000000000000000000
+          CAMCORE_AI_OAUTH_CLIENT_INFO_ENCRYPTION_KEY: ci-client-info-secret-000000000000000000000000000
+          CAMCORE_AI_PROXY_TRUSTED_CIDR: 172.30.0.0/16
+        run: >-
+          docker compose -f deploy/camcore/compose.yaml config --format json
+          > /tmp/camcore-open-webui.json
+
+      - name: Enforce deployment contract
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+
+          expected_image = (
+              "ghcr.io/open-webui/open-webui:v0.11.0@"
+              "sha256:72c0ba641ba75e7aa52655cb242570906ececd09b1140fb736483038a22b3228"
+          )
+          rendered = json.loads(Path("/tmp/camcore-open-webui.json").read_text())
+          assert set(rendered["services"]) == {"open-webui"}
+          service = rendered["services"]["open-webui"]
+          env = service["environment"]
+
+          assert service["image"] == expected_image
+          assert not service.get("ports"), "host ports are forbidden"
+          assert service["expose"] == ["8080"]
+          assert "ALL" in service["cap_drop"]
+          assert "no-new-privileges:true" in service["security_opt"]
+          assert service.get("privileged") in (None, False)
+          assert service["healthcheck"]["test"]
+          assert service["volumes"], "persistent data volume is required"
+          assert set(service["networks"]) == {"ai", "proxy"}
+          assert rendered["networks"]["ai"]["name"] == "camcore-ai-backend"
+          assert rendered["networks"]["proxy"]["name"] == "npm-backend"
+
+          required = {
+              "WEBUI_URL": "https://ai.camcore.au",
+              "WEBUI_NAME": "Open WebUI",
+              "ENABLE_SIGNUP": "false",
+              "ENABLE_INITIAL_ADMIN_SIGNUP": "false",
+              "ENABLE_LOGIN_FORM": "false",
+              "ENABLE_PASSWORD_AUTH": "false",
+              "ENABLE_OAUTH": "true",
+              "ENABLE_OAUTH_SIGNUP": "true",
+              "ENABLE_OAUTH_ROLE_MANAGEMENT": "true",
+              "OAUTH_ROLES_CLAIM": "roles",
+              "OAUTH_ALLOWED_ROLES": "CamCore.AI.User,CamCore.AI.Admin",
+              "OAUTH_ADMIN_ROLES": "CamCore.AI.Admin",
+              "MICROSOFT_REDIRECT_URI": "https://ai.camcore.au/oauth/microsoft/callback",
+              "MICROSOFT_OAUTH_SCOPE": "openid email profile offline_access",
+              "OPENID_PROVIDER_URL": "https://login.microsoftonline.com/ci-tenant/v2.0/.well-known/openid-configuration",
+              "ENABLE_OAUTH_ID_TOKEN_COOKIE": "false",
+              "ENABLE_OAUTH_TOKEN_EXCHANGE": "false",
+              "ENABLE_PROFILE_IMAGE_URL_FORWARDING": "false",
+              "ENABLE_PERSISTENT_CONFIG": "false",
+              "ENABLE_OLLAMA_API": "true",
+              "OLLAMA_BASE_URL": "http://camcore-ollama:11434",
+              "ENABLE_OPENAI_API": "false",
+              "ENABLE_OPENAI_API_PASSTHROUGH": "false",
+              "ENABLE_FORWARD_USER_INFO_HEADERS": "false",
+              "SAFE_MODE": "true",
+              "ENABLE_PLUGINS": "false",
+              "ENABLE_API_KEYS": "false",
+              "ENABLE_DIRECT_CONNECTIONS": "false",
+              "ENABLE_CODE_EXECUTION": "false",
+              "ENABLE_CODE_INTERPRETER": "false",
+              "ENABLE_WEB_SEARCH": "false",
+              "ENABLE_IMAGE_GENERATION": "false",
+              "ENABLE_COMMUNITY_SHARING": "false",
+              "USER_PERMISSIONS_CHAT_FILE_UPLOAD": "false",
+              "USER_PERMISSIONS_CHAT_SHARE": "false",
+              "USER_PERMISSIONS_CHAT_ALLOW_OPEN_SHARING": "false",
+              "AUDIT_LOG_LEVEL": "METADATA",
+              "OFFLINE_MODE": "true",
+          }
+          for key, value in required.items():
+              assert env.get(key) == value, f"{key} must be {value!r}"
+
+          source = Path("deploy/camcore/compose.yaml").read_text().lower()
+          assert "ports:" not in source
+          assert "latest" not in service["image"]
+
+      - name: Verify required inputs fail closed
+        shell: bash
+        run: |
+          set -euo pipefail
+          required=(
+            CAMCORE_AI_MICROSOFT_TENANT_ID
+            CAMCORE_AI_MICROSOFT_CLIENT_ID
+            CAMCORE_AI_MICROSOFT_CLIENT_SECRET
+            CAMCORE_AI_WEBUI_SECRET_KEY
+            CAMCORE_AI_OAUTH_SESSION_TOKEN_ENCRYPTION_KEY
+            CAMCORE_AI_OAUTH_CLIENT_INFO_ENCRYPTION_KEY
+            CAMCORE_AI_PROXY_TRUSTED_CIDR
+          )
+
+          for name in "${required[@]}"; do
+            export "$name=ci-validation-value-0000000000000000000000000000"
+          done
+
+          for missing in "${required[@]}"; do
+            unset "$missing"
+            if docker compose -f deploy/camcore/compose.yaml config --quiet >/dev/null 2>&1; then
+              echo "compose accepted missing required input: $missing" >&2
+              exit 1
+            fi
+            export "$missing=ci-validation-value-0000000000000000000000000000"
+          done
