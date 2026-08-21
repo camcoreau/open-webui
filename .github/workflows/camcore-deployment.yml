@@ -115,6 +115,11 @@ jobs:
           assert "ports:" not in source
           assert "latest" not in service["image"]
 
+          runbook = Path("deploy/camcore/README.md").read_text()
+          assert "only one designated bootstrap operator" in runbook
+          assert "must be the first OAuth user" in runbook
+          assert "Only after both administrator logins are verified" in runbook
+
       - name: Verify required inputs fail closed
         shell: bash
         run: |
