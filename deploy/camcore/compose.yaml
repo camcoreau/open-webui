@@ -1,0 +1,179 @@
+name: camcore-open-webui
+
+services:
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:v0.11.0@sha256:72c0ba641ba75e7aa52655cb242570906ececd09b1140fb736483038a22b3228
+    container_name: camcore-open-webui
+    hostname: open-webui
+    restart: unless-stopped
+    init: true
+    environment:
+      ENV: "prod"
+      PORT: "8080"
+      UVICORN_WORKERS: "1"
+      WEBUI_URL: "https://ai.camcore.au"
+      WEBUI_NAME: "Open WebUI"
+      WEBUI_AUTH: "true"
+      WEBUI_SECRET_KEY: "${CAMCORE_AI_WEBUI_SECRET_KEY:?CAMCORE_AI_WEBUI_SECRET_KEY must be set}"
+      OAUTH_SESSION_TOKEN_ENCRYPTION_KEY: "${CAMCORE_AI_OAUTH_SESSION_TOKEN_ENCRYPTION_KEY:?CAMCORE_AI_OAUTH_SESSION_TOKEN_ENCRYPTION_KEY must be set}"
+      OAUTH_CLIENT_INFO_ENCRYPTION_KEY: "${CAMCORE_AI_OAUTH_CLIENT_INFO_ENCRYPTION_KEY:?CAMCORE_AI_OAUTH_CLIENT_INFO_ENCRYPTION_KEY must be set}"
+
+      # Configuration is GitOps-controlled. Admin-panel changes are intentionally
+      # discarded at restart instead of weakening these production defaults.
+      ENABLE_PERSISTENT_CONFIG: "false"
+      ENABLE_OAUTH_PERSISTENT_CONFIG: "false"
+
+      # Dedicated Microsoft Entra sign-in. Local account and password paths are off.
+      ENABLE_SIGNUP: "false"
+      ENABLE_INITIAL_ADMIN_SIGNUP: "false"
+      ENABLE_LOGIN_FORM: "false"
+      ENABLE_PASSWORD_AUTH: "false"
+      ENABLE_PASSWORD_CHANGE_FORM: "false"
+      ENABLE_OAUTH: "true"
+      ENABLE_OAUTH_SIGNUP: "true"
+      OAUTH_AUTO_REDIRECT: "true"
+      MICROSOFT_CLIENT_TENANT_ID: "${CAMCORE_AI_MICROSOFT_TENANT_ID:?CAMCORE_AI_MICROSOFT_TENANT_ID must be set}"
+      MICROSOFT_CLIENT_ID: "${CAMCORE_AI_MICROSOFT_CLIENT_ID:?CAMCORE_AI_MICROSOFT_CLIENT_ID must be set}"
+      MICROSOFT_CLIENT_SECRET: "${CAMCORE_AI_MICROSOFT_CLIENT_SECRET:?CAMCORE_AI_MICROSOFT_CLIENT_SECRET must be set}"
+      MICROSOFT_REDIRECT_URI: "https://ai.camcore.au/oauth/microsoft/callback"
+      MICROSOFT_OAUTH_SCOPE: "openid email profile offline_access"
+      OPENID_PROVIDER_URL: "https://login.microsoftonline.com/${CAMCORE_AI_MICROSOFT_TENANT_ID:?CAMCORE_AI_MICROSOFT_TENANT_ID must be set}/v2.0/.well-known/openid-configuration"
+      ENABLE_OAUTH_ROLE_MANAGEMENT: "true"
+      OAUTH_ROLES_CLAIM: "roles"
+      OAUTH_ALLOWED_ROLES: "CamCore.AI.User,CamCore.AI.Admin"
+      OAUTH_ADMIN_ROLES: "CamCore.AI.Admin"
+      DEFAULT_USER_ROLE: "pending"
+      OAUTH_MERGE_ACCOUNTS_BY_EMAIL: "false"
+      OAUTH_MAX_SESSIONS_PER_USER: "5"
+      ENABLE_OAUTH_ID_TOKEN_COOKIE: "false"
+      ENABLE_OAUTH_TOKEN_EXCHANGE: "false"
+      ENABLE_PROFILE_IMAGE_URL_FORWARDING: "false"
+      JWT_EXPIRES_IN: "8h"
+
+      # TLS is terminated by Nginx Proxy Manager. Only that network's exact CIDR
+      # is trusted to supply forwarding headers; never configure this as '*'.
+      FORWARDED_ALLOW_IPS: "${CAMCORE_AI_PROXY_TRUSTED_CIDR:?CAMCORE_AI_PROXY_TRUSTED_CIDR must be set}"
+      CORS_ALLOW_ORIGIN: "https://ai.camcore.au"
+      WEBUI_SESSION_COOKIE_SAME_SITE: "lax"
+      WEBUI_SESSION_COOKIE_SECURE: "true"
+      WEBUI_AUTH_COOKIE_SAME_SITE: "lax"
+      WEBUI_AUTH_COOKIE_SECURE: "true"
+
+      # The sole inference path is the private Ollama alias on camcore-ai-backend.
+      ENABLE_OLLAMA_API: "true"
+      OLLAMA_BASE_URL: "http://camcore-ollama:11434"
+      ENABLE_OPENAI_API: "false"
+      ENABLE_OPENAI_API_PASSTHROUGH: "false"
+      ENABLE_FORWARD_USER_INFO_HEADERS: "false"
+
+      # High-risk extension, execution, retrieval, and egress surfaces stay off.
+      SAFE_MODE: "true"
+      ENABLE_PLUGINS: "false"
+      ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS: "false"
+      ENABLE_API_KEYS: "false"
+      ENABLE_DIRECT_CONNECTIONS: "false"
+      TOOL_SERVER_CONNECTIONS: "[]"
+      TERMINAL_SERVER_CONNECTIONS: "[]"
+      ENABLE_CODE_EXECUTION: "false"
+      ENABLE_CODE_INTERPRETER: "false"
+      ENABLE_PYODIDE_FILE_PERSISTENCE: "false"
+      ENABLE_WEB_SEARCH: "false"
+      ENABLE_IMAGE_GENERATION: "false"
+      ENABLE_AUTOMATIONS: "false"
+      ENABLE_SUBAGENTS: "false"
+      ENABLE_CALENDAR: "false"
+      ENABLE_MEMORIES: "false"
+      ENABLE_NOTES: "false"
+      ENABLE_CHANNELS: "false"
+      ENABLE_USER_WEBHOOKS: "false"
+      USER_PERMISSIONS_CHAT_FILE_UPLOAD: "false"
+      USER_PERMISSIONS_CHAT_WEB_UPLOAD: "false"
+      USER_PERMISSIONS_CHAT_IMPORT: "false"
+      USER_PERMISSIONS_CHAT_EXPORT: "false"
+      USER_PERMISSIONS_CHAT_SHARE: "false"
+      USER_PERMISSIONS_CHAT_RATE_RESPONSE: "false"
+      USER_PERMISSIONS_FEATURES_DIRECT_TOOL_SERVERS: "false"
+      USER_PERMISSIONS_FEATURES_WEB_SEARCH: "false"
+      USER_PERMISSIONS_FEATURES_IMAGE_GENERATION: "false"
+      USER_PERMISSIONS_FEATURES_CODE_INTERPRETER: "false"
+      USER_PERMISSIONS_FEATURES_MEMORIES: "false"
+      USER_PERMISSIONS_FEATURES_AUTOMATIONS: "false"
+      USER_PERMISSIONS_FEATURES_CALENDAR: "false"
+      USER_PERMISSIONS_FEATURES_NOTES: "false"
+      USER_PERMISSIONS_FEATURES_CHANNELS: "false"
+      USER_PERMISSIONS_FEATURES_USER_WEBHOOKS: "false"
+      USER_PERMISSIONS_FEATURES_API_KEYS: "false"
+      USER_PERMISSIONS_WORKSPACE_MODELS_ACCESS: "false"
+      USER_PERMISSIONS_WORKSPACE_KNOWLEDGE_ACCESS: "false"
+      USER_PERMISSIONS_WORKSPACE_PROMPTS_ACCESS: "false"
+      USER_PERMISSIONS_WORKSPACE_TOOLS_ACCESS: "false"
+      USER_PERMISSIONS_WORKSPACE_SKILLS_ACCESS: "false"
+      USER_PERMISSIONS_CHAT_ALLOW_PUBLIC_SHARING: "false"
+      USER_PERMISSIONS_CHAT_ALLOW_OPEN_SHARING: "false"
+      ENABLE_COMMUNITY_SHARING: "false"
+
+      # Keep content out of admin-facing convenience surfaces and audit metadata only.
+      ENABLE_ADMIN_CHAT_ACCESS: "false"
+      ENABLE_ADMIN_EXPORT: "false"
+      ENABLE_ADMIN_ANALYTICS: "false"
+      BYPASS_ADMIN_ACCESS_CONTROL: "false"
+      ENABLE_MESSAGE_RATING: "false"
+      AUDIT_LOG_LEVEL: "METADATA"
+      ENABLE_AUDIT_STDOUT: "true"
+      ENABLE_AUDIT_LOGS_FILE: "false"
+      ENABLE_AUDIT_GET_REQUESTS: "false"
+
+      # No update checks or runtime downloads. OAuth and the private Ollama API
+      # continue to work in Open WebUI offline mode.
+      OFFLINE_MODE: "true"
+      HF_HUB_OFFLINE: "1"
+      ENABLE_VERSION_UPDATE_CHECK: "false"
+      RAG_EMBEDDING_MODEL_AUTO_UPDATE: "false"
+      RAG_RERANKING_MODEL_AUTO_UPDATE: "false"
+      RAG_EMBEDDING_MODEL_TRUST_REMOTE_CODE: "false"
+      RAG_RERANKING_MODEL_TRUST_REMOTE_CODE: "false"
+      ENABLE_OTEL: "false"
+    expose:
+      - "8080"
+    volumes:
+      - open-webui-data:/app/backend/data
+    networks:
+      proxy:
+        aliases:
+          - open-webui
+      ai:
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=256m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    stop_grace_period: 30s
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          curl --fail --silent --show-error http://127.0.0.1:8080/health >/dev/null
+          && curl --fail --silent --show-error http://127.0.0.1:8080/ready >/dev/null
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+volumes:
+  open-webui-data:
+    name: camcore-open-webui-data
+
+networks:
+  proxy:
+    name: npm-backend
+    external: true
+  ai:
+    name: camcore-ai-backend
+    external: true
