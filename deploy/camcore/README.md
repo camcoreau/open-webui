@@ -54,13 +54,24 @@ a browser SPA registration or another CamCore service identity.
 2. Create enabled application roles whose values are exactly
    `CamCore.AI.User` and `CamCore.AI.Admin`.
 3. In the Enterprise Application, set **Assignment required** to **Yes**.
-4. Assign approved members to `CamCore.AI.User`. Assign at least two emergency
-   operators to `CamCore.AI.Admin` before launch, then test both roles.
-5. Use only the OpenID scopes requested by the compose file (`openid`, `email`,
+4. Before the first login, assign **only one designated bootstrap operator** to
+   `CamCore.AI.Admin`. Do not assign `CamCore.AI.User` to any member yet.
+5. After deployment, that designated operator must be the first OAuth user. Verify
+   the resulting account is an administrator, then assign a second emergency
+   operator to `CamCore.AI.Admin` and have that operator complete one login.
+6. Only after both administrator logins are verified may approved members be
+   assigned to `CamCore.AI.User`.
+7. Use only the OpenID scopes requested by the compose file (`openid`, `email`,
    `profile`, and `offline_access`). Do not grant broad Microsoft Graph application
    permissions.
-6. Create a time-limited client secret, record its expiry in the CamCore secret
+8. Create a time-limited client secret, record its expiry in the CamCore secret
    rotation process, and store the value only in the deployment secret manager.
+
+Open WebUI v0.11 promotes the first OAuth user to administrator as its bootstrap
+behaviour, regardless of the ordinary role mapping. The admin-only assignment and
+first-login sequence above is therefore a security control, not an optional
+convenience. If any other identity reaches the instance first, stop the rollout
+and remediate the fresh instance before assigning members or retaining user data.
 
 Creating or rotating the Entra client secret changes persistent access. Carry it
 out in an approved change window and never paste the value into source control,
@@ -140,16 +151,18 @@ The change is accepted only after all of the following pass:
 2. `docker port camcore-open-webui` prints no published port.
 3. `https://ai.camcore.au` redirects an unauthenticated browser to the dedicated
    Microsoft sign-in flow with the exact registered callback.
-4. A user assigned only `CamCore.AI.User` can chat with the approved local model
+4. The designated bootstrap operator was the first OAuth login and is an
+   administrator; a separately assigned backup administrator has also logged in.
+5. Member assignments were created only after those two administrator checks.
+6. A user assigned only `CamCore.AI.User` can chat with the approved local model
    but cannot reach admin settings or any disabled feature.
-5. A `CamCore.AI.Admin` emergency operator can administer the instance.
-6. An otherwise valid tenant user with no app role is denied/pending.
-7. A basic chat completes through private Ollama, and stopping or disconnecting
+7. An otherwise valid tenant user with no app role is denied/pending.
+8. A basic chat completes through private Ollama, and stopping or disconnecting
    that backend fails closed rather than selecting an internet provider.
-8. Local login/signup controls, uploads, sharing, API keys, tools, code execution,
+9. Local login/signup controls, uploads, sharing, API keys, tools, code execution,
    web search, and external provider controls are absent or rejected.
-9. Desktop and mobile views have no overflow or authentication-loop defects.
-10. Container logs show metadata-only audit entries and contain no prompt bodies,
+10. Desktop and mobile views have no overflow or authentication-loop defects.
+11. Container logs show metadata-only audit entries and contain no prompt bodies,
     responses, OAuth tokens, or secret values.
 
 ## Backup, upgrade, and rollback
