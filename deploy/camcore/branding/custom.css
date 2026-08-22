@@ -1,0 +1,234 @@
+/* CamCore visual layer for Jarvis | CamCore AI.
+   Mirrors the production CamCore.au design tokens while leaving Open WebUI
+   structure and attribution intact. */
+
+:root,
+html.light,
+html.dark {
+  --camcore-ink: #f7fbff;
+  --camcore-ink-soft: #d9e8f2;
+  --camcore-muted: #9cb1c1;
+  --camcore-quiet: #708899;
+  --camcore-canvas: #030709;
+  --camcore-canvas-raised: #071014;
+  --camcore-surface: #0b171d;
+  --camcore-surface-soft: rgba(255, 255, 255, 0.038);
+  --camcore-surface-hover: rgba(255, 255, 255, 0.07);
+  --camcore-line: rgba(178, 218, 231, 0.14);
+  --camcore-line-strong: rgba(178, 218, 231, 0.28);
+  --camcore-cyan: #16d7e8;
+  --camcore-cyan-light: #98f4fb;
+  --camcore-blue: #4aa8ff;
+  --camcore-focus: #adf7ff;
+
+  /* Re-map Open WebUI's neutral palette into the CamCore surface system. */
+  --color-gray-50: #f7fbff;
+  --color-gray-100: #edf7fb;
+  --color-gray-200: #d9e8f2;
+  --color-gray-300: #b8cedb;
+  --color-gray-400: #9cb1c1;
+  --color-gray-500: #708899;
+  --color-gray-600: #526a78;
+  --color-gray-700: #243942;
+  --color-gray-800: #13252d;
+  --color-gray-850: #0b171d;
+  --color-gray-900: #071014;
+  --color-gray-950: #030709;
+}
+
+html,
+body {
+  background: var(--camcore-canvas) !important;
+  color: var(--camcore-ink);
+}
+
+body {
+  background-image:
+    radial-gradient(circle at 8% 0%, rgba(22, 215, 232, 0.13), transparent 32rem),
+    radial-gradient(circle at 90% 4%, rgba(74, 168, 255, 0.09), transparent 35rem),
+    linear-gradient(180deg, #030709 0%, #061015 54%, #030709 100%) !important;
+  background-attachment: fixed !important;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.7;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.016) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.016) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: linear-gradient(to bottom, #000 0%, transparent 78%);
+}
+
+::selection {
+  color: #001014;
+  background: var(--camcore-cyan-light);
+}
+
+:focus-visible {
+  outline-color: var(--camcore-focus) !important;
+}
+
+/* Keep the application chrome dark and glassy, matching CamCore.au. */
+.dark .bg-gray-950,
+.dark .bg-gray-900,
+.dark .bg-gray-850,
+.dark .bg-gray-800,
+.light .bg-white,
+.light .bg-gray-50,
+.light .bg-gray-100 {
+  background-color: rgba(7, 16, 20, 0.90) !important;
+}
+
+[class*="border-gray-"] {
+  border-color: var(--camcore-line) !important;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+button:hover,
+a:hover {
+  border-color: rgba(22, 215, 232, 0.28);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--camcore-focus) !important;
+  outline-offset: 2px;
+}
+
+input,
+textarea,
+select {
+  border-color: var(--camcore-line) !important;
+  background-color: rgba(11, 23, 29, 0.92) !important;
+  color: var(--camcore-ink) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--camcore-quiet) !important;
+}
+
+/* Open WebUI primary blue controls become CamCore cyan/blue. */
+.bg-blue-600,
+.bg-blue-500,
+.hover\:bg-blue-700:hover,
+.hover\:bg-blue-600:hover {
+  background: linear-gradient(135deg, rgba(22, 215, 232, 0.95), rgba(74, 168, 255, 0.92)) !important;
+  color: #001014 !important;
+}
+
+.text-blue-500,
+.text-blue-600,
+.text-blue-700,
+.dark .dark\:text-blue-400 {
+  color: var(--camcore-cyan-light) !important;
+}
+
+.border-blue-500,
+.border-blue-600 {
+  border-color: rgba(22, 215, 232, 0.65) !important;
+}
+
+/* Chat composer: make it read as the same raised panel language as CamCore.au. */
+form textarea,
+form [contenteditable="true"] {
+  background: transparent !important;
+}
+
+form:has(textarea),
+form:has([contenteditable="true"]) {
+  border-color: var(--camcore-line) !important;
+}
+
+/* Sidebar/list hover language. */
+#sidebar-chat-item:hover,
+.app-interactive-active,
+.dark .dark\:hover\:bg-gray-800:hover,
+.dark .dark\:hover\:bg-gray-850:hover {
+  background: var(--camcore-surface-hover) !important;
+}
+
+#sidebar-chat-item[aria-current="page"],
+#sidebar-chat-item.active {
+  color: var(--camcore-cyan-light) !important;
+}
+
+/* Scrollbars match the CamCore muted cyan palette. */
+::-webkit-scrollbar-thumb,
+.dark ::-webkit-scrollbar-thumb {
+  background-color: rgba(112, 136, 153, 0.48) !important;
+  border-color: rgba(3, 7, 9, 0.82) !important;
+}
+
+::-webkit-scrollbar-thumb:hover,
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(22, 215, 232, 0.38) !important;
+}
+
+/* Branded loading experience using the actual CamCore wordmark. */
+#splash-screen {
+  background:
+    radial-gradient(circle at 14% 12%, rgba(22, 215, 232, 0.17), transparent 28rem),
+    radial-gradient(circle at 88% 10%, rgba(74, 168, 255, 0.10), transparent 30rem),
+    linear-gradient(180deg, #030709 0%, #071014 55%, #030709 100%) !important;
+}
+
+#splash-screen #logo,
+#splash-screen #logo-her {
+  visibility: hidden !important;
+}
+
+#splash-screen::before {
+  content: "";
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  width: min(360px, 68vw);
+  height: 120px;
+  transform: translate(-50%, -50%);
+  background: url('/static/camcore-logo.png') center / contain no-repeat;
+  filter: drop-shadow(0 22px 60px rgba(0, 0, 0, 0.44));
+}
+
+#splash-screen::after {
+  content: "Jarvis  |  CamCore AI";
+  position: absolute;
+  top: calc(42% + 84px);
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--camcore-muted);
+  font: 700 0.72rem/1.2 Inter, ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Give modals and popovers the same raised-surface treatment. */
+[role="dialog"],
+[role="menu"],
+[role="listbox"] {
+  border-color: var(--camcore-line) !important;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42) !important;
+}
+
+/* Preserve upstream attribution; this file intentionally changes presentation only. */

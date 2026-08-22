@@ -1,0 +1,92 @@
+name: Build CamCore branded Open WebUI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "deploy/camcore/branding/**"
+      - ".github/workflows/camcore-branding-image.yml"
+  push:
+    branches: [main]
+    paths:
+      - "deploy/camcore/branding/**"
+      - ".github/workflows/camcore-branding-image.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: camcore-branding-image-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build branding overlay
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Verify overlay contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          dockerfile=deploy/camcore/branding/Dockerfile
+          grep -Fq 'FROM ghcr.io/open-webui/open-webui:v0.11.0@sha256:72c0ba641ba75e7aa52655cb242570906ececd09b1140fb736483038a22b3228' "$dockerfile"
+          grep -Fq 'COPY deploy/camcore/branding/custom.css /app/build/static/custom.css' "$dockerfile"
+          grep -Fq 'COPY deploy/camcore/branding/loader.js /app/build/static/loader.js' "$dockerfile"
+          grep -Fq 'COPY deploy/camcore/branding/camcore-mark.svg /app/build/static/camcore-mark.svg' "$dockerfile"
+          grep -Fq '#16d7e8' deploy/camcore/branding/custom.css
+          grep -Fq '#030709' deploy/camcore/branding/custom.css
+          grep -Fq 'Jarvis  |  CamCore AI' deploy/camcore/branding/custom.css
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build CamCore branding image
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/camcore/branding/Dockerfile
+          platforms: linux/amd64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ghcr.io/camcoreau/open-webui:camcore-${{ github.sha }}
+            ghcr.io/camcoreau/open-webui:camcore-current
+          labels: |
+            org.opencontainers.image.title=Jarvis | CamCore AI
+            org.opencontainers.image.description=CamCore visual overlay for Open WebUI
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=https://github.com/camcoreau/open-webui
+          provenance: mode=max
+          sbom: true
+
+      - name: Record immutable image reference
+        if: github.event_name != 'pull_request'
+        shell: bash
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          set -euo pipefail
+          test -n "$DIGEST"
+          printf '%s\n' "ghcr.io/camcoreau/open-webui:camcore-${GITHUB_SHA}@${DIGEST}" | tee camcore-branding-image.txt
+
+      - name: Upload immutable image reference
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: camcore-branding-image
+          path: camcore-branding-image.txt
+          if-no-files-found: error
+          retention-days: 14
