@@ -70,7 +70,7 @@ jobs:
 
           required = {
               "WEBUI_URL": "https://ai.camcore.network",
-              "WEBUI_NAME": "Open WebUI",
+              "WEBUI_NAME": "Jarvis | CamCore AI",
               "ENABLE_SIGNUP": "false",
               "ENABLE_INITIAL_ADMIN_SIGNUP": "false",
               "ENABLE_LOGIN_FORM": "false",
