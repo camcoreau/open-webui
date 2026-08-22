@@ -69,7 +69,7 @@ jobs:
           assert rendered["networks"]["proxy"]["name"] == "npm-backend"
 
           required = {
-              "WEBUI_URL": "https://ai.camcore.au",
+              "WEBUI_URL": "https://ai.camcore.network",
               "WEBUI_NAME": "Open WebUI",
               "ENABLE_SIGNUP": "false",
               "ENABLE_INITIAL_ADMIN_SIGNUP": "false",
@@ -81,7 +81,7 @@ jobs:
               "OAUTH_ROLES_CLAIM": "roles",
               "OAUTH_ALLOWED_ROLES": "CamCore.AI.User,CamCore.AI.Admin",
               "OAUTH_ADMIN_ROLES": "CamCore.AI.Admin",
-              "MICROSOFT_REDIRECT_URI": "https://ai.camcore.au/oauth/microsoft/callback",
+              "MICROSOFT_REDIRECT_URI": "https://ai.camcore.network/oauth/microsoft/callback",
               "MICROSOFT_OAUTH_SCOPE": "openid email profile offline_access",
               "OPENID_PROVIDER_URL": "https://login.microsoftonline.com/ci-tenant/v2.0/.well-known/openid-configuration",
               "ENABLE_OAUTH_ID_TOKEN_COOKIE": "false",
