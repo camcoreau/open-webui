@@ -2,7 +2,7 @@ name: camcore-open-webui
 
 services:
   open-webui:
-    image: ghcr.io/open-webui/open-webui:v0.11.0@sha256:72c0ba641ba75e7aa52655cb242570906ececd09b1140fb736483038a22b3228
+    image: ghcr.io/camcoreau/open-webui:camcore-9793564487afccce757ff1bd42f947ca3f67f227@sha256:451b99a261ccc3765541483a48c2a83ca841b4025dcb37fa00bc120d0a4b6e72
     container_name: camcore-open-webui
     hostname: open-webui
     restart: unless-stopped
