@@ -93,6 +93,8 @@ jobs:
               "ENABLE_OPENAI_API": "false",
               "ENABLE_OPENAI_API_PASSTHROUGH": "false",
               "ENABLE_FORWARD_USER_INFO_HEADERS": "false",
+              "BYPASS_MODEL_ACCESS_CONTROL": "true",
+              "BYPASS_ADMIN_ACCESS_CONTROL": "false",
               "SAFE_MODE": "true",
               "ENABLE_PLUGINS": "false",
               "ENABLE_API_KEYS": "false",
@@ -119,6 +121,7 @@ jobs:
           assert "only one designated bootstrap operator" in runbook
           assert "must be the first OAuth user" in runbook
           assert "Only after both administrator logins are verified" in runbook
+          assert "BYPASS_MODEL_ACCESS_CONTROL=true" in runbook
 
       - name: Verify required inputs fail closed
         shell: bash

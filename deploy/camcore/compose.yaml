@@ -66,6 +66,12 @@ services:
       ENABLE_OPENAI_API_PASSTHROUGH: "false"
       ENABLE_FORWARD_USER_INFO_HEADERS: "false"
 
+      # CamCore authorizes access to this single approved inference backend with
+      # Entra application assignment and app roles. Open WebUI v0.11 otherwise
+      # rejects raw provider models that have no local Workspace model row.
+      BYPASS_MODEL_ACCESS_CONTROL: "true"
+      BYPASS_ADMIN_ACCESS_CONTROL: "false"
+
       # High-risk extension, execution, retrieval, and egress surfaces stay off.
       SAFE_MODE: "true"
       ENABLE_PLUGINS: "false"
@@ -116,7 +122,6 @@ services:
       ENABLE_ADMIN_CHAT_ACCESS: "false"
       ENABLE_ADMIN_EXPORT: "false"
       ENABLE_ADMIN_ANALYTICS: "false"
-      BYPASS_ADMIN_ACCESS_CONTROL: "false"
       ENABLE_MESSAGE_RATING: "false"
       AUDIT_LOG_LEVEL: "METADATA"
       ENABLE_AUDIT_STDOUT: "true"

@@ -26,6 +26,13 @@ port `11434`.
   pending and must not be admitted.
 - The only enabled inference provider is private Ollama at
   `http://camcore-ollama:11434`.
+- `BYPASS_MODEL_ACCESS_CONTROL=true` is intentional for this single approved
+  backend. Open WebUI v0.11 otherwise rejects raw provider models that have no
+  local Workspace model row. Model admission is therefore controlled by the
+  Entra application assignment and `CamCore.AI.User` / `CamCore.AI.Admin` roles,
+  not by Open WebUI's optional per-model ACL layer.
+- `BYPASS_ADMIN_ACCESS_CONTROL=false` remains enforced. Administrator privileges
+  do not bypass the rest of Open WebUI's access-control checks.
 - OpenAI-compatible passthrough, OAuth token exchange, ID-token cookies, profile
   image forwarding and user-info forwarding are disabled.
 - Plugins, package installation, tool servers, terminal connections, API keys,
