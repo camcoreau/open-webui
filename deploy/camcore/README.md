@@ -1,15 +1,22 @@
 # CamCore Open WebUI deployment
 
-This overlay deploys one upstream-branded Open WebUI instance at
+This overlay deploys one **CamCore-branded Open WebUI** instance at
 `https://ai.camcore.network` for internal CamCore access only. The service is not
 published through the public `camcore.au` ingress and must remain reachable only
 from the CamCore LAN or an approved private network path such as NetBird.
 
-The production image is immutable:
+The production image is immutable and contains only the reviewed CamCore visual
+overlay on top of the exact approved Open WebUI v0.11.0 runtime:
 
 ```text
-ghcr.io/open-webui/open-webui:v0.11.0@sha256:72c0ba641ba75e7aa52655cb242570906ececd09b1140fb736483038a22b3228
+ghcr.io/camcoreau/open-webui:camcore-9793564487afccce757ff1bd42f947ca3f67f227@sha256:451b99a261ccc3765541483a48c2a83ca841b4025dcb37fa00bc120d0a4b6e72
 ```
+
+The branding layer changes presentation only: CamCore colours, surfaces, browser
+icon, loading treatment and `Jarvis | CamCore AI` identity. Open WebUI attribution
+remains visible as `Jarvis | CamCore AI (Open WebUI)`. The application runtime,
+authentication model, networks, persistent data and inference path remain the
+approved upstream-based deployment.
 
 The service publishes no host port. Nginx Proxy Manager reaches port `8080` over
 the external `npm-backend` network, while Open WebUI reaches only the
@@ -43,7 +50,8 @@ port `11434`.
 - Audit output records metadata rather than prompt or response bodies.
 - Runtime configuration is environment-authoritative. Admin-panel changes do not
   survive restart.
-- Open WebUI naming, logos and required attribution remain upstream defaults.
+- CamCore visual identity is delivered through the reviewed immutable branding
+  layer; required Open WebUI attribution remains visible.
 
 Open WebUI administrators remain root-equivalent for this single-tenant instance.
 Assign the administrator role only to trusted CamCore operators.
@@ -178,6 +186,9 @@ The change is accepted only after all of the following pass:
 10. Container logs contain no prompt bodies, responses, OAuth tokens or secret
     values.
 11. The service is not reachable through the public `camcore.au` ingress.
+12. The loading screen, favicon, dark canvas, cyan/blue accents and raised surfaces
+    visibly match the CamCore design language, and the title remains
+    `Jarvis | CamCore AI (Open WebUI)` with Open WebUI attribution intact.
 
 ## Backup, upgrade and rollback
 
@@ -192,8 +203,14 @@ For this single-replica SQLite release, take a cold encrypted backup:
 3. Verify backup integrity, encryption, retention and a restore test.
 4. Start the container and recheck health, Entra sign-in and one local-model chat.
 
+The CamCore branding image is a presentation-only layer over the approved upstream
+runtime. A visual-only rollback may pin the previous known-good Open WebUI image,
+but authentication, model access and data compatibility must still be validated
+before the rollback is promoted.
+
 Before an upgrade, verify the target upstream release and digest, review release
-notes and licensing, take a verified cold backup, change the immutable image pin
+notes and licensing, take a verified cold backup, rebuild the CamCore branding
+layer on that exact upstream image, pin the resulting immutable image digest
 through a pull request and repeat the acceptance checklist. Database migrations can
 make an image-only rollback unsafe; restore both the previous image and its matching
 pre-upgrade data snapshot when necessary.

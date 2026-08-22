@@ -48,8 +48,9 @@ jobs:
           from pathlib import Path
 
           expected_image = (
-              "ghcr.io/open-webui/open-webui:v0.11.0@"
-              "sha256:72c0ba641ba75e7aa52655cb242570906ececd09b1140fb736483038a22b3228"
+              "ghcr.io/camcoreau/open-webui:camcore-"
+              "9793564487afccce757ff1bd42f947ca3f67f227@"
+              "sha256:451b99a261ccc3765541483a48c2a83ca841b4025dcb37fa00bc120d0a4b6e72"
           )
           rendered = json.loads(Path("/tmp/camcore-open-webui.json").read_text())
           assert set(rendered["services"]) == {"open-webui"}
@@ -57,6 +58,8 @@ jobs:
           env = service["environment"]
 
           assert service["image"] == expected_image
+          assert "@sha256:" in service["image"], "production image must be digest pinned"
+          assert "camcore-current" not in service["image"], "mutable branding tag is forbidden"
           assert not service.get("ports"), "host ports are forbidden"
           assert service["expose"] == ["8080"]
           assert "ALL" in service["cap_drop"]
@@ -116,6 +119,22 @@ jobs:
           source = Path("deploy/camcore/compose.yaml").read_text().lower()
           assert "ports:" not in source
           assert "latest" not in service["image"]
+
+          branding = Path("deploy/camcore/branding")
+          for path in (
+              branding / "Dockerfile",
+              branding / "custom.css",
+              branding / "loader.js",
+              branding / "camcore-mark.svg",
+          ):
+              assert path.is_file() and path.stat().st_size > 0, f"missing branding asset: {path}"
+
+          css = (branding / "custom.css").read_text()
+          assert "#030709" in css
+          assert "#071014" in css
+          assert "#16d7e8" in css
+          assert "#4aa8ff" in css
+          assert "Jarvis  |  CamCore AI" in css
 
           runbook = Path("deploy/camcore/README.md").read_text()
           assert "only one designated bootstrap operator" in runbook
