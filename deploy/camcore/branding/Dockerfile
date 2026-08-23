@@ -13,14 +13,50 @@ COPY deploy/camcore/branding/camcore-mark.svg /app/build/static/camcore-mark.svg
 COPY deploy/camcore/branding/camcore-manifest.json /app/build/static/camcore-manifest.json
 COPY deploy/camcore/branding/patch_runtime.py /tmp/camcore-patch-runtime.py
 
-# Binary brand assets are staged by the branding workflow from the exact pinned
-# camcoreau/camcore-websites commit before this Dockerfile is built.
-COPY deploy/camcore/branding/runtime-assets/camcore-logo.png /app/build/static/camcore-logo.png
-COPY deploy/camcore/branding/runtime-assets/favicon.png /app/build/static/favicon.png
-COPY deploy/camcore/branding/runtime-assets/favicon.png /app/build/static/favicon-96x96.png
-COPY deploy/camcore/branding/runtime-assets/favicon.svg /app/build/static/favicon.svg
-COPY deploy/camcore/branding/runtime-assets/apple-touch-icon.png /app/build/static/apple-touch-icon.png
-COPY deploy/camcore/branding/runtime-assets/icon-512.png /app/build/static/icon-512.png
+# Use the real production CamCore assets. They are downloaded only while the
+# immutable image is built; the running service has no dependency on camcore.au.
+# The following Git blob hashes are pinned to camcoreau/camcore-websites commit
+# c652985eb0ada755c6a3940da5426d57c59b293a and are verified immediately below.
+ADD https://camcore.au/assets/camcore-logo.png /app/build/static/camcore-logo.png
+ADD https://camcore.au/assets/favicon.png /app/build/static/favicon.png
+ADD https://camcore.au/assets/apple-touch-icon.png /app/build/static/apple-touch-icon.png
+ADD https://camcore.au/assets/icon-512.png /app/build/static/icon-512.png
+
+RUN python - <<'PY'
+from __future__ import annotations
+
+import base64
+import hashlib
+from pathlib import Path
+
+expected = {
+    Path('/app/build/static/camcore-logo.png'): '8e5f36f6b13021145449ff59cd95593650963921',
+    Path('/app/build/static/favicon.png'): '77b25f513e3bd501d6e2578b4c8bee73da0928e8',
+    Path('/app/build/static/apple-touch-icon.png'): '5ec9b1ea22bd45c50ff159a5b4046eba424f67b6',
+    Path('/app/build/static/icon-512.png'): '540a5b2a15dd3d9f830dd58555f6b653c12c5f29',
+}
+
+for path, expected_sha in expected.items():
+    data = path.read_bytes()
+    git_blob = hashlib.sha1(f'blob {len(data)}\0'.encode() + data).hexdigest()
+    if git_blob != expected_sha:
+        raise SystemExit(
+            f'CamCore production asset verification failed for {path}: '
+            f'expected {expected_sha}, got {git_blob}'
+        )
+
+# Open WebUI ships an SVG favicon link. Generate an SVG wrapper around the exact
+# verified CamCore PNG so that link also resolves to the production identity.
+favicon = Path('/app/build/static/favicon.png').read_bytes()
+encoded = base64.b64encode(favicon).decode('ascii')
+Path('/app/build/static/favicon.svg').write_text(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">'
+    f'<image width="512" height="512" href="data:image/png;base64,{encoded}"/>'
+    '</svg>',
+    encoding='utf-8',
+)
+Path('/app/build/static/favicon-96x96.png').write_bytes(favicon)
+PY
 
 # Open WebUI v0.11 appends "(Open WebUI)" to every custom WEBUI_NAME. CamCore's
 # <=50-user branding exception permits replacing that deployed product branding.
