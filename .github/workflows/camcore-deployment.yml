@@ -69,8 +69,8 @@ jobs:
           assert service.get("privileged") in (None, False)
           assert service["healthcheck"]["test"]
           assert service["volumes"], "persistent data volume is required"
-          assert set(service["networks"]) == {"ai", "proxy"}
-          assert rendered["networks"]["ai"]["name"] == "camcore-ai-backend"
+          assert set(service["networks"]) == {"proxy"}
+          assert set(rendered["networks"]) == {"proxy"}
           assert rendered["networks"]["proxy"]["name"] == "npm-backend"
 
           required = {
@@ -97,8 +97,7 @@ jobs:
               "OPENAI_API_BASE_URL": "https://api.openai.com/v1",
               "OPENAI_API_KEY": "ci-openai-key",
               "ENABLE_BASE_MODELS_CACHE": "false",
-              "ENABLE_OLLAMA_API": "true",
-              "OLLAMA_BASE_URL": "http://camcore-ollama:11434",
+              "ENABLE_OLLAMA_API": "false",
               "ENABLE_FORWARD_USER_INFO_HEADERS": "false",
               "BYPASS_MODEL_ACCESS_CONTROL": "true",
               "BYPASS_ADMIN_ACCESS_CONTROL": "false",
@@ -121,6 +120,8 @@ jobs:
           }
           for key, value in required.items():
               assert env.get(key) == value, f"{key} must be {value!r}"
+
+          assert "OLLAMA_BASE_URL" not in env
 
           openai_configs = json.loads(env["OPENAI_API_CONFIGS"])
           assert openai_configs == {
@@ -163,6 +164,7 @@ jobs:
           assert "sk-proj-" not in source, "OpenAI API keys must never be committed"
           assert "ci-gateway-key" not in source, "gateway bearer secrets must never be committed"
           assert "http://camcore-ai-gateway:8100" not in source
+          assert "camcore-ollama" not in source
 
           branding = Path("deploy/camcore/branding")
           for path in (
@@ -189,6 +191,8 @@ jobs:
           assert "CAMCORE_AI_GATEWAY_API_KEY" in runbook
           assert "ai-tools.camcore.network" in runbook
           assert "camcore-ai-operations" in runbook
+          assert "camcoreau/camcore-ai-gateway" in runbook
+          assert "gateway is deployed by `camcoreau/jarvis`" not in runbook.lower()
 
       - name: Verify required inputs fail closed
         shell: bash
