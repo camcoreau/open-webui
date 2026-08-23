@@ -85,13 +85,20 @@ services:
       BYPASS_MODEL_ACCESS_CONTROL: "true"
       BYPASS_ADMIN_ACCESS_CONTROL: "false"
 
-      # High-risk extension, execution, retrieval, and egress surfaces stay off.
+      # The only global external tool server is the private, read-only CamCore
+      # Operations Gateway. Docker Compose injects the bearer secret before the
+      # JSON reaches Open WebUI; it is never committed to Git.
+      TOOL_SERVER_CONNECTIONS: >-
+        [{"url":"http://camcore-ai-gateway:8100","path":"openapi.json","type":"openapi","auth_type":"bearer","headers":null,"key":"${CAMCORE_AI_GATEWAY_API_KEY:?CAMCORE_AI_GATEWAY_API_KEY must be set}","config":{"enable":true},"info":{"id":"camcore-operations","name":"CamCore Operations","description":"Read-only CamCore infrastructure, monitoring, documentation and service operations tools."},"spec_type":"url"}]
+
+      # High-risk extension, execution, retrieval, and arbitrary egress surfaces stay off.
+      # Global CamCore Operations tools above are fixed by GitOps; users cannot add
+      # their own direct tool servers or API connections.
       SAFE_MODE: "true"
       ENABLE_PLUGINS: "false"
       ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS: "false"
       ENABLE_API_KEYS: "false"
       ENABLE_DIRECT_CONNECTIONS: "false"
-      TOOL_SERVER_CONNECTIONS: "[]"
       TERMINAL_SERVER_CONNECTIONS: "[]"
       ENABLE_CODE_EXECUTION: "false"
       ENABLE_CODE_INTERPRETER: "false"
@@ -141,8 +148,8 @@ services:
       ENABLE_AUDIT_LOGS_FILE: "false"
       ENABLE_AUDIT_GET_REQUESTS: "false"
 
-      # No update checks or runtime downloads. OAuth, external provider API calls
-      # and the private Ollama API continue to work in Open WebUI offline mode.
+      # No update checks or runtime downloads. OAuth, external provider API calls,
+      # private Ollama and the private CamCore Operations API continue to work.
       OFFLINE_MODE: "true"
       HF_HUB_OFFLINE: "1"
       ENABLE_VERSION_UPDATE_CHECK: "false"
