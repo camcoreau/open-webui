@@ -40,16 +40,17 @@ jobs:
           loader=deploy/camcore/branding/loader.js
           manifest=deploy/camcore/branding/camcore-manifest.json
           patcher=deploy/camcore/branding/patch_runtime.py
+          verifier=deploy/camcore/branding/verify_assets.py
 
           grep -Fq 'FROM ghcr.io/open-webui/open-webui:v0.11.0@sha256:72c0ba641ba75e7aa52655cb242570906ececd09b1140fb736483038a22b3228' "$dockerfile"
           grep -Fq 'c652985eb0ada755c6a3940da5426d57c59b293a' "$dockerfile"
           grep -Fq 'https://camcore.au/assets/camcore-logo.png' "$dockerfile"
-          grep -Fq '8e5f36f6b13021145449ff59cd95593650963921' "$dockerfile"
-          grep -Fq '77b25f513e3bd501d6e2578b4c8bee73da0928e8' "$dockerfile"
-          grep -Fq '5ec9b1ea22bd45c50ff159a5b4046eba424f67b6' "$dockerfile"
-          grep -Fq '540a5b2a15dd3d9f830dd58555f6b653c12c5f29' "$dockerfile"
+          grep -Fq '8e5f36f6b13021145449ff59cd95593650963921' "$verifier"
+          grep -Fq '77b25f513e3bd501d6e2578b4c8bee73da0928e8' "$verifier"
+          grep -Fq '5ec9b1ea22bd45c50ff159a5b4046eba424f67b6' "$verifier"
+          grep -Fq '540a5b2a15dd3d9f830dd58555f6b653c12c5f29' "$verifier"
 
-          for path in "$css" "$loader" "$manifest" "$patcher" deploy/camcore/branding/camcore-mark.svg; do
+          for path in "$css" "$loader" "$manifest" "$patcher" "$verifier" deploy/camcore/branding/camcore-mark.svg; do
             test -s "$path"
           done
 
