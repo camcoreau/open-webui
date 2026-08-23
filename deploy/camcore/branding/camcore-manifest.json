@@ -2,6 +2,7 @@
   "name": "Jarvis | CamCore AI",
   "short_name": "Jarvis",
   "description": "Private AI workspace for CamCore.",
+  "lang": "en-AU",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -10,7 +11,7 @@
   "icons": [
     {
       "src": "/static/favicon.png",
-      "sizes": "96x96",
+      "sizes": "64x64",
       "type": "image/png"
     },
     {
@@ -22,7 +23,7 @@
       "src": "/static/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }
