@@ -34,6 +34,7 @@ jobs:
           CAMCORE_AI_MICROSOFT_CLIENT_ID: ci-client
           CAMCORE_AI_MICROSOFT_CLIENT_SECRET: ci-client-secret
           CAMCORE_AI_OPENAI_API_KEY: ci-openai-key
+          CAMCORE_AI_GATEWAY_API_KEY: ci-gateway-key
           CAMCORE_AI_WEBUI_SECRET_KEY: ci-webui-secret-00000000000000000000000000000000
           CAMCORE_AI_OAUTH_SESSION_TOKEN_ENCRYPTION_KEY: ci-session-secret-000000000000000000000000000000
           CAMCORE_AI_OAUTH_CLIENT_INFO_ENCRYPTION_KEY: ci-client-info-secret-000000000000000000000000000
@@ -113,6 +114,7 @@ jobs:
               "USER_PERMISSIONS_CHAT_FILE_UPLOAD": "false",
               "USER_PERMISSIONS_CHAT_SHARE": "false",
               "USER_PERMISSIONS_CHAT_ALLOW_OPEN_SHARING": "false",
+              "USER_PERMISSIONS_FEATURES_DIRECT_TOOL_SERVERS": "false",
               "AUDIT_LOG_LEVEL": "METADATA",
               "OFFLINE_MODE": "true",
           }
@@ -132,6 +134,19 @@ jobs:
               }
           }
 
+          tool_servers = json.loads(env["TOOL_SERVER_CONNECTIONS"])
+          assert len(tool_servers) == 1
+          tool_server = tool_servers[0]
+          assert tool_server["type"] == "openapi"
+          assert tool_server["url"] == "http://camcore-ai-gateway:8100"
+          assert tool_server["path"] == "openapi.json"
+          assert tool_server["spec_type"] == "url"
+          assert tool_server["auth_type"] == "bearer"
+          assert tool_server["key"] == "ci-gateway-key"
+          assert tool_server["config"] == {"enable": True}
+          assert tool_server["info"]["id"] == "camcore-operations"
+          assert tool_server["info"]["name"] == "CamCore Operations"
+
           banners = json.loads(env["WEBUI_BANNERS"])
           assert len(banners) == 1
           assert banners[0]["title"] == "CamCore AI"
@@ -145,6 +160,7 @@ jobs:
           assert "ports:" not in source
           assert "latest" not in service["image"]
           assert "sk-proj-" not in source, "OpenAI API keys must never be committed"
+          assert "ci-gateway-key" not in source, "gateway bearer secrets must never be committed"
 
           branding = Path("deploy/camcore/branding")
           for path in (
@@ -168,6 +184,8 @@ jobs:
           assert "Only after both administrator logins are verified" in runbook
           assert "BYPASS_MODEL_ACCESS_CONTROL=true" in runbook
           assert "CAMCORE_AI_OPENAI_API_KEY" in runbook
+          assert "CAMCORE_AI_GATEWAY_API_KEY" in runbook
+          assert "camcore-ai-gateway" in runbook
 
       - name: Verify required inputs fail closed
         shell: bash
@@ -178,6 +196,7 @@ jobs:
             CAMCORE_AI_MICROSOFT_CLIENT_ID
             CAMCORE_AI_MICROSOFT_CLIENT_SECRET
             CAMCORE_AI_OPENAI_API_KEY
+            CAMCORE_AI_GATEWAY_API_KEY
             CAMCORE_AI_WEBUI_SECRET_KEY
             CAMCORE_AI_OAUTH_SESSION_TOKEN_ENCRYPTION_KEY
             CAMCORE_AI_OAUTH_CLIENT_INFO_ENCRYPTION_KEY
