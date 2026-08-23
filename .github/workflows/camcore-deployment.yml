@@ -33,6 +33,7 @@ jobs:
           CAMCORE_AI_MICROSOFT_TENANT_ID: ci-tenant
           CAMCORE_AI_MICROSOFT_CLIENT_ID: ci-client
           CAMCORE_AI_MICROSOFT_CLIENT_SECRET: ci-client-secret
+          CAMCORE_AI_OPENAI_API_KEY: ci-openai-key
           CAMCORE_AI_WEBUI_SECRET_KEY: ci-webui-secret-00000000000000000000000000000000
           CAMCORE_AI_OAUTH_SESSION_TOKEN_ENCRYPTION_KEY: ci-session-secret-000000000000000000000000000000
           CAMCORE_AI_OAUTH_CLIENT_INFO_ENCRYPTION_KEY: ci-client-info-secret-000000000000000000000000000
@@ -91,10 +92,12 @@ jobs:
               "ENABLE_OAUTH_TOKEN_EXCHANGE": "false",
               "ENABLE_PROFILE_IMAGE_URL_FORWARDING": "false",
               "ENABLE_PERSISTENT_CONFIG": "false",
+              "ENABLE_OPENAI_API": "true",
+              "OPENAI_API_BASE_URL": "https://api.openai.com/v1",
+              "OPENAI_API_KEY": "ci-openai-key",
+              "ENABLE_BASE_MODELS_CACHE": "false",
               "ENABLE_OLLAMA_API": "true",
               "OLLAMA_BASE_URL": "http://camcore-ollama:11434",
-              "ENABLE_OPENAI_API": "false",
-              "ENABLE_OPENAI_API_PASSTHROUGH": "false",
               "ENABLE_FORWARD_USER_INFO_HEADERS": "false",
               "BYPASS_MODEL_ACCESS_CONTROL": "true",
               "BYPASS_ADMIN_ACCESS_CONTROL": "false",
@@ -116,9 +119,32 @@ jobs:
           for key, value in required.items():
               assert env.get(key) == value, f"{key} must be {value!r}"
 
+          openai_configs = json.loads(env["OPENAI_API_CONFIGS"])
+          assert openai_configs == {
+              "0": {
+                  "enable": True,
+                  "tags": [],
+                  "prefix_id": "",
+                  "model_ids": [],
+                  "connection_type": "external",
+                  "auth_type": "bearer",
+                  "passthrough_params": [],
+              }
+          }
+
+          banners = json.loads(env["WEBUI_BANNERS"])
+          assert len(banners) == 1
+          assert banners[0]["title"] == "CamCore AI"
+          assert "CamCore Operations" in banners[0]["content"]
+
+          suggestions = json.loads(env["DEFAULT_PROMPT_SUGGESTIONS"])
+          assert len(suggestions) >= 4
+          assert suggestions[0]["title"][0] == "Check CamCore health"
+
           source = Path("deploy/camcore/compose.yaml").read_text().lower()
           assert "ports:" not in source
           assert "latest" not in service["image"]
+          assert "sk-proj-" not in source, "OpenAI API keys must never be committed"
 
           branding = Path("deploy/camcore/branding")
           for path in (
@@ -141,6 +167,7 @@ jobs:
           assert "must be the first OAuth user" in runbook
           assert "Only after both administrator logins are verified" in runbook
           assert "BYPASS_MODEL_ACCESS_CONTROL=true" in runbook
+          assert "CAMCORE_AI_OPENAI_API_KEY" in runbook
 
       - name: Verify required inputs fail closed
         shell: bash
@@ -150,6 +177,7 @@ jobs:
             CAMCORE_AI_MICROSOFT_TENANT_ID
             CAMCORE_AI_MICROSOFT_CLIENT_ID
             CAMCORE_AI_MICROSOFT_CLIENT_SECRET
+            CAMCORE_AI_OPENAI_API_KEY
             CAMCORE_AI_WEBUI_SECRET_KEY
             CAMCORE_AI_OAUTH_SESSION_TOKEN_ENCRYPTION_KEY
             CAMCORE_AI_OAUTH_CLIENT_INFO_ENCRYPTION_KEY
