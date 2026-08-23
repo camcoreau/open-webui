@@ -66,17 +66,15 @@ services:
       WEBUI_AUTH_COOKIE_SAME_SITE: "lax"
       WEBUI_AUTH_COOKIE_SECURE: "true"
 
-      # OpenAI is the primary managed inference provider. Private Ollama remains
-      # enabled temporarily as a migration/rollback path until OpenAI is validated
-      # across a full container recreation and the legacy Jarvis stack is retired.
+      # OpenAI is the production inference provider. Local Ollama inference is
+      # disabled so Open WebUI no longer depends on the legacy OpenJarvis stack.
       ENABLE_OPENAI_API: "true"
       OPENAI_API_BASE_URL: "https://api.openai.com/v1"
       OPENAI_API_KEY: "${CAMCORE_AI_OPENAI_API_KEY:?CAMCORE_AI_OPENAI_API_KEY must be set}"
       OPENAI_API_CONFIGS: >-
         {"0":{"enable":true,"tags":[],"prefix_id":"","model_ids":[],"connection_type":"external","auth_type":"bearer","passthrough_params":[]}}
       ENABLE_BASE_MODELS_CACHE: "false"
-      ENABLE_OLLAMA_API: "true"
-      OLLAMA_BASE_URL: "http://camcore-ollama:11434"
+      ENABLE_OLLAMA_API: "false"
       ENABLE_FORWARD_USER_INFO_HEADERS: "false"
 
       # CamCore authorizes the approved provider set through Entra application
@@ -85,13 +83,22 @@ services:
       BYPASS_MODEL_ACCESS_CONTROL: "true"
       BYPASS_ADMIN_ACCESS_CONTROL: "false"
 
-      # High-risk extension, execution, retrieval, and egress surfaces stay off.
+      # The only global external tool server is the private, read-only CamCore
+      # Operations Gateway. Open WebUI reaches it through the private NPM HTTPS
+      # endpoint and validates the TLS certificate. Docker Compose injects the
+      # bearer secret before the JSON reaches Open WebUI; it is never committed.
+      AIOHTTP_CLIENT_SESSION_TOOL_SERVER_SSL: "true"
+      TOOL_SERVER_CONNECTIONS: >-
+        [{"url":"https://ai-tools.camcore.network","path":"openapi.json","type":"openapi","auth_type":"bearer","headers":null,"key":"${CAMCORE_AI_GATEWAY_API_KEY:?CAMCORE_AI_GATEWAY_API_KEY must be set}","config":{"enable":true},"info":{"id":"camcore-operations","name":"CamCore Operations","description":"Read-only CamCore infrastructure, monitoring, documentation and service operations tools."},"spec_type":"url"}]
+
+      # High-risk extension, execution, retrieval, and arbitrary egress surfaces stay off.
+      # Global CamCore Operations tools above are fixed by GitOps; users cannot add
+      # their own direct tool servers or API connections.
       SAFE_MODE: "true"
       ENABLE_PLUGINS: "false"
       ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS: "false"
       ENABLE_API_KEYS: "false"
       ENABLE_DIRECT_CONNECTIONS: "false"
-      TOOL_SERVER_CONNECTIONS: "[]"
       TERMINAL_SERVER_CONNECTIONS: "[]"
       ENABLE_CODE_EXECUTION: "false"
       ENABLE_CODE_INTERPRETER: "false"
@@ -141,8 +148,8 @@ services:
       ENABLE_AUDIT_LOGS_FILE: "false"
       ENABLE_AUDIT_GET_REQUESTS: "false"
 
-      # No update checks or runtime downloads. OAuth, external provider API calls
-      # and the private Ollama API continue to work in Open WebUI offline mode.
+      # No update checks or runtime downloads. OAuth, OpenAI and the private CamCore
+      # Operations API continue to work while background model downloads stay off.
       OFFLINE_MODE: "true"
       HF_HUB_OFFLINE: "1"
       ENABLE_VERSION_UPDATE_CHECK: "false"
@@ -159,7 +166,6 @@ services:
       proxy:
         aliases:
           - open-webui
-      ai:
     tmpfs:
       - /tmp:rw,noexec,nosuid,nodev,size=256m
     cap_drop:
@@ -191,7 +197,4 @@ volumes:
 networks:
   proxy:
     name: npm-backend
-    external: true
-  ai:
-    name: camcore-ai-backend
     external: true
