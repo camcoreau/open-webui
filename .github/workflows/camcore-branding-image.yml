@@ -30,18 +30,59 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
 
-      - name: Verify overlay contract
+      - name: Verify branding contract
         shell: bash
         run: |
           set -euo pipefail
+
           dockerfile=deploy/camcore/branding/Dockerfile
+          css=deploy/camcore/branding/custom.css
+          loader=deploy/camcore/branding/loader.js
+          manifest=deploy/camcore/branding/camcore-manifest.json
+          patcher=deploy/camcore/branding/patch_runtime.py
+
           grep -Fq 'FROM ghcr.io/open-webui/open-webui:v0.11.0@sha256:72c0ba641ba75e7aa52655cb242570906ececd09b1140fb736483038a22b3228' "$dockerfile"
-          grep -Fq 'COPY deploy/camcore/branding/custom.css /app/build/static/custom.css' "$dockerfile"
-          grep -Fq 'COPY deploy/camcore/branding/loader.js /app/build/static/loader.js' "$dockerfile"
-          grep -Fq 'COPY deploy/camcore/branding/camcore-mark.svg /app/build/static/camcore-mark.svg' "$dockerfile"
-          grep -Fq '#16d7e8' deploy/camcore/branding/custom.css
-          grep -Fq '#030709' deploy/camcore/branding/custom.css
-          grep -Fq 'Jarvis  |  CamCore AI' deploy/camcore/branding/custom.css
+          grep -Fq 'c652985eb0ada755c6a3940da5426d57c59b293a' "$dockerfile"
+          grep -Fq 'https://camcore.au/assets/camcore-logo.png' "$dockerfile"
+          grep -Fq '8e5f36f6b13021145449ff59cd95593650963921' "$dockerfile"
+          grep -Fq '77b25f513e3bd501d6e2578b4c8bee73da0928e8' "$dockerfile"
+          grep -Fq '5ec9b1ea22bd45c50ff159a5b4046eba424f67b6' "$dockerfile"
+          grep -Fq '540a5b2a15dd3d9f830dd58555f6b653c12c5f29' "$dockerfile"
+
+          for path in "$css" "$loader" "$manifest" "$patcher" deploy/camcore/branding/camcore-mark.svg; do
+            test -s "$path"
+          done
+
+          grep -Fq '#030709' "$css"
+          grep -Fq '#071014' "$css"
+          grep -Fq '#16d7e8' "$css"
+          grep -Fq '#4aa8ff' "$css"
+          grep -Fq '#auth-login-card' "$css"
+          grep -Fq '#sidebar-webui-name' "$css"
+          grep -Fq '#chat-input' "$css"
+          grep -Fq '#splash-screen' "$css"
+          grep -Fq "url('/static/camcore-logo.png')" "$css"
+          grep -Fq 'Jarvis  |  CamCore AI' "$css"
+          grep -Fq 'prefers-reduced-motion' "$css"
+
+          grep -Fq "const PRODUCT_NAME = 'Jarvis | CamCore AI'" "$loader"
+          grep -Fq "const MANIFEST = '/static/camcore-manifest.json'" "$loader"
+          grep -Fq "localStorage.setItem('theme', 'dark')" "$loader"
+          grep -Fq '"name": "Jarvis | CamCore AI"' "$manifest"
+          grep -Fq '"theme_color": "#071014"' "$manifest"
+
+          # Runtime CSS/JS must not depend on the public CamCore website.
+          ! grep -Eq 'https?://' "$css"
+          ! grep -Eq 'https?://' "$loader"
+
+      - name: Verify guarded runtime identity patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp backend/open_webui/env.py /tmp/camcore-env.py
+          python deploy/camcore/branding/patch_runtime.py /tmp/camcore-env.py
+          ! grep -Fq "WEBUI_NAME += ' (Open WebUI)'" /tmp/camcore-env.py
+          grep -Fq "WEBUI_FAVICON_URL = '/static/favicon.png'" /tmp/camcore-env.py
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -67,9 +108,11 @@ jobs:
             ghcr.io/camcoreau/open-webui:camcore-current
           labels: |
             org.opencontainers.image.title=Jarvis | CamCore AI
-            org.opencontainers.image.description=CamCore visual overlay for Open WebUI
+            org.opencontainers.image.description=CamCore product identity and visual layer for Open WebUI
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.source=https://github.com/camcoreau/open-webui
+            au.camcore.brand.source.repository=camcoreau/camcore-websites
+            au.camcore.brand.source.revision=c652985eb0ada755c6a3940da5426d57c59b293a
           provenance: mode=max
           sbom: true
 
