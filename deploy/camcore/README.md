@@ -13,11 +13,10 @@ ghcr.io/camcoreau/open-webui:camcore-0468f881f069c2cb67c0a279d8fdcd6830799bc5@sh
 ```
 
 The service publishes no host port. Nginx Proxy Manager reaches Open WebUI over
-`npm-backend`. Open WebUI also joins `camcore-ai-backend` only for the temporary
-private Ollama fallback. CamCore Operations traffic does **not** use that shared
-network: it goes to `https://ai-tools.camcore.network` with TLS verification
-enabled, then NPM forwards to the standalone gateway over a dedicated two-service
-network.
+`npm-backend`. Open WebUI no longer joins the legacy `camcore-ai-backend` network
+or depends on Ollama/OpenJarvis. CamCore Operations traffic goes to
+`https://ai-tools.camcore.network` with TLS verification enabled, then NPM forwards
+to the standalone gateway over a dedicated two-service network.
 
 ## Security posture
 
@@ -25,10 +24,10 @@ network.
   and account merging are disabled.
 - Entra app roles are authoritative: `CamCore.AI.User` grants member access and
   `CamCore.AI.Admin` grants administrator access.
-- OpenAI at `https://api.openai.com/v1` is the primary managed inference provider.
-  Its key is supplied only through `CAMCORE_AI_OPENAI_API_KEY` in Portainer.
-- Private Ollama at `http://camcore-ollama:11434` remains enabled only as a staged
-  migration/rollback path until the OpenAI and operations integrations are stable.
+- OpenAI at `https://api.openai.com/v1` is the production inference provider. Its
+  key is supplied only through `CAMCORE_AI_OPENAI_API_KEY` in Portainer.
+- Local Ollama inference is disabled; Open WebUI has no runtime dependency on the
+  legacy OpenJarvis stack.
 - The only globally configured external tool server is the private CamCore
   Operations Gateway at `https://ai-tools.camcore.network`. It exposes a reviewed
   read-only OpenAPI surface and requires `CAMCORE_AI_GATEWAY_API_KEY`.
@@ -70,13 +69,12 @@ Use the dedicated, single-tenant app registration named `CamCore AI`.
    application.
 8. Keep the Entra client secret only in Portainer or the approved secret store.
 
-## 2. Required Open WebUI networks and secrets
+## 2. Required Open WebUI network and secrets
 
-The existing Open WebUI networks must exist before deployment:
+The Open WebUI production network must exist before deployment:
 
 ```text
 npm-backend
-camcore-ai-backend
 ```
 
 Determine the exact `npm-backend` subnet and set it as
@@ -169,6 +167,7 @@ Connection type: external
 Authentication: bearer
 Model filter: provider discovery
 Base model cache: disabled
+Ollama: disabled
 ```
 
 The OpenAI key is never embedded in `compose.yaml`; the stack fails closed if
@@ -213,35 +212,33 @@ The change is accepted only after all of the following pass:
 3. Neither service publishes a host port.
 4. Entra-only sign-in and the CamCore application roles behave as expected.
 5. OpenAI models are visible and a basic chat completes without re-entering the key.
-6. `https://ai-tools.camcore.network/health` is reachable from the Open WebUI
+6. No Ollama models/provider entry are exposed by Open WebUI.
+7. `https://ai-tools.camcore.network/health` is reachable from the Open WebUI
    container and certificate validation succeeds.
-7. `CamCore Operations` appears as the GitOps-controlled tool server and its schema
+8. `CamCore Operations` appears as the GitOps-controlled tool server and its schema
    loads from `https://ai-tools.camcore.network/openapi.json`.
-8. Asking Jarvis to **Check CamCore health** can invoke `get_camcore_health`; missing
+9. Asking Jarvis to **Check CamCore health** can invoke `get_camcore_health`; missing
    or failed integrations are reported as unavailable rather than healthy.
-9. Restart/recreate Open WebUI and confirm the OpenAI connection, CamCore Operations
-   connection, banner and starter prompts all return automatically.
-10. Local login/signup, uploads, public sharing, user API keys, arbitrary tool
+10. Restart/recreate Open WebUI and confirm the OpenAI connection, CamCore Operations
+    connection, banner and starter prompts all return automatically.
+11. Local login/signup, uploads, public sharing, user API keys, arbitrary tool
     connections, modifying tools, code execution and web search remain unavailable.
-11. Neither `ai.camcore.network` nor `ai-tools.camcore.network` is reachable through
+12. Neither `ai.camcore.network` nor `ai-tools.camcore.network` is reachable through
     public CamCore ingress.
 
-## 7. OpenJarvis and Ollama retirement gate
+## 7. Legacy OpenJarvis/Ollama retirement
 
-The standalone CamCore AI Gateway does not require OpenJarvis or Ollama. Retain the
-legacy containers only for the short rollback window while production acceptance is
-completed.
+This Open WebUI configuration no longer requires OpenJarvis, Ollama or the
+`camcore-ai-backend` network. After the acceptance checks above pass:
 
-1. Confirm OpenAI chat and CamCore Operations both pass restart/recreation tests.
-2. Confirm no remaining workflow depends on the local Qwen/Ollama endpoint.
-3. Disable `ENABLE_OLLAMA_API` and remove `OLLAMA_BASE_URL` through a reviewed Open
-   WebUI change.
-4. Redeploy and verify OpenAI chat, CamCore Operations, Entra and health checks.
-5. Stop/remove the legacy `camcore-jarvis` and `camcore-jarvis-ollama` containers;
-   keep `camcore-ai-gateway` running independently.
-6. Retain legacy Ollama volumes temporarily for rollback, then delete them only
-   after the rollback window expires.
-7. Archive or retire the legacy `camcoreau/jarvis` deployment after no production
+1. Stop/remove the legacy `camcore-jarvis` and `camcore-jarvis-ollama` runtime
+   containers while keeping `camcore-ai-gateway` running independently.
+2. Confirm `Jarvis | CamCore AI` still provides OpenAI chat and CamCore Operations.
+3. Retain legacy Ollama volumes only for the agreed rollback window, then remove
+   them after a final backup/rollback decision.
+4. Remove the unused `camcore-ai-backend` Docker network when no remaining service
+   references it.
+5. Archive or retire the legacy `camcoreau/jarvis` deployment after no production
    stack references it.
 
 ## Backup and upgrade
