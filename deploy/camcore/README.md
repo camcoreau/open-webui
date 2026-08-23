@@ -16,7 +16,8 @@ The service publishes no host port. Nginx Proxy Manager reaches Open WebUI over
 `npm-backend`. Open WebUI also joins `camcore-ai-backend` only for the temporary
 private Ollama fallback. CamCore Operations traffic does **not** use that shared
 network: it goes to `https://ai-tools.camcore.network` with TLS verification
-enabled, then NPM forwards to the gateway over a dedicated two-service network.
+enabled, then NPM forwards to the standalone gateway over a dedicated two-service
+network.
 
 ## Security posture
 
@@ -31,6 +32,8 @@ enabled, then NPM forwards to the gateway over a dedicated two-service network.
 - The only globally configured external tool server is the private CamCore
   Operations Gateway at `https://ai-tools.camcore.network`. It exposes a reviewed
   read-only OpenAPI surface and requires `CAMCORE_AI_GATEWAY_API_KEY`.
+- The gateway is a standalone CamCore service from
+  `camcoreau/camcore-ai-gateway`; OpenJarvis is not part of the gateway runtime.
 - Open WebUI explicitly keeps tool-server TLS certificate verification enabled.
 - `BYPASS_MODEL_ACCESS_CONTROL=true` is intentional for the approved provider set;
   Entra application assignment and CamCore app roles remain the admission boundary.
@@ -95,7 +98,7 @@ CAMCORE_AI_PROXY_TRUSTED_CIDR
 
 `CAMCORE_AI_GATEWAY_API_KEY` must be a separate high-entropy service credential;
 do not reuse the OpenAI project key, Entra secret or WebUI encryption keys. Store
-the same gateway value in both the `camcore-open-webui` and `camcore-jarvis`
+the same gateway value in both the `camcore-ai-gateway` and `camcore-open-webui`
 Portainer stack environments. Never commit the populated value to Git.
 
 With `ENABLE_PERSISTENT_CONFIG=false`, the approved OpenAI and CamCore Operations
@@ -128,8 +131,8 @@ nginx-proxy-manager
 camcore-ai-gateway
 ```
 
-Do not attach Open WebUI, Ollama, the legacy Jarvis service or unrelated containers
-to `camcore-ai-operations`.
+Do not attach Open WebUI, Ollama, the legacy OpenJarvis service or unrelated
+containers to `camcore-ai-operations`.
 
 Create private DNS:
 
@@ -183,10 +186,10 @@ Authentication: Bearer CAMCORE_AI_GATEWAY_API_KEY
 TLS verification: enabled
 ```
 
-The gateway is deployed by `camcoreau/jarvis`, publishes no host port and is
-reachable by NPM only through `camcore-ai-operations`. Provider credentials and
-upstream service URLs remain server-side in the gateway Portainer stack; model
-arguments cannot replace them.
+The gateway is deployed independently from `camcoreau/camcore-ai-gateway`,
+publishes no host port and is reachable by NPM only through
+`camcore-ai-operations`. Provider credentials and upstream service URLs remain
+server-side in the gateway Portainer stack; model arguments cannot replace them.
 
 The initial tool surface is deliberately **read-only** and includes bounded health,
 logs, infrastructure, documentation and service-status operations. It does not
@@ -196,39 +199,50 @@ Open WebUI-native confirmation layer before production enablement.
 
 ## 6. Deploy and accept
 
-Deploy `deploy/camcore/compose.yaml` as a single-replica **Portainer** stack. The
-change is accepted only after all of the following pass:
+Deploy the standalone gateway first from
+`camcoreau/camcore-ai-gateway/deploy/camcore/compose.yaml`. Set
+`CAMCORE_AI_GATEWAY_RELEASE` to the published gateway commit SHA and provide the
+same `CAMCORE_AI_GATEWAY_API_KEY` value that will be used by Open WebUI. Then deploy
+this repository's `deploy/camcore/compose.yaml` as the single-replica Open WebUI
+**Portainer** stack.
 
-1. `camcore-open-webui` reports healthy and `/health` plus `/ready` succeed.
-2. The container publishes no host port.
-3. Entra-only sign-in and the CamCore application roles behave as expected.
-4. OpenAI models are visible and a basic chat completes without re-entering the key.
-5. `https://ai-tools.camcore.network/health` is reachable from the Open WebUI
+The change is accepted only after all of the following pass:
+
+1. `camcore-ai-gateway` reports healthy on its private operations network.
+2. `camcore-open-webui` reports healthy and `/health` plus `/ready` succeed.
+3. Neither service publishes a host port.
+4. Entra-only sign-in and the CamCore application roles behave as expected.
+5. OpenAI models are visible and a basic chat completes without re-entering the key.
+6. `https://ai-tools.camcore.network/health` is reachable from the Open WebUI
    container and certificate validation succeeds.
-6. `CamCore Operations` appears as the GitOps-controlled tool server and its schema
+7. `CamCore Operations` appears as the GitOps-controlled tool server and its schema
    loads from `https://ai-tools.camcore.network/openapi.json`.
-7. Asking Jarvis to **Check CamCore health** can invoke `get_camcore_health`; missing
+8. Asking Jarvis to **Check CamCore health** can invoke `get_camcore_health`; missing
    or failed integrations are reported as unavailable rather than healthy.
-8. Restart/recreate Open WebUI and confirm the OpenAI connection, CamCore Operations
+9. Restart/recreate Open WebUI and confirm the OpenAI connection, CamCore Operations
    connection, banner and starter prompts all return automatically.
-9. Local login/signup, uploads, public sharing, user API keys, arbitrary tool
-   connections, modifying tools, code execution and web search remain unavailable.
-10. Neither `ai.camcore.network` nor `ai-tools.camcore.network` is reachable through
+10. Local login/signup, uploads, public sharing, user API keys, arbitrary tool
+    connections, modifying tools, code execution and web search remain unavailable.
+11. Neither `ai.camcore.network` nor `ai-tools.camcore.network` is reachable through
     public CamCore ingress.
 
-## 7. Ollama and legacy Jarvis retirement gate
+## 7. OpenJarvis and Ollama retirement gate
 
-Do not remove the legacy Ollama data immediately. Retire the old inference path only
-after OpenAI and CamCore Operations have passed restart/recreation tests and normal
-production use.
+The standalone CamCore AI Gateway does not require OpenJarvis or Ollama. Retain the
+legacy containers only for the short rollback window while production acceptance is
+completed.
 
-1. Confirm no workflow depends on the local Qwen/Ollama endpoint.
-2. Disable `ENABLE_OLLAMA_API` and remove `OLLAMA_BASE_URL` through a reviewed change.
-3. Redeploy and verify OpenAI chat, CamCore Operations, Entra and health checks.
-4. Stop/remove the legacy Jarvis/Ollama inference containers while keeping the new
-   `camcore-ai-gateway` service.
-5. Retain Ollama volumes temporarily for rollback, then delete only after the
-   rollback window expires.
+1. Confirm OpenAI chat and CamCore Operations both pass restart/recreation tests.
+2. Confirm no remaining workflow depends on the local Qwen/Ollama endpoint.
+3. Disable `ENABLE_OLLAMA_API` and remove `OLLAMA_BASE_URL` through a reviewed Open
+   WebUI change.
+4. Redeploy and verify OpenAI chat, CamCore Operations, Entra and health checks.
+5. Stop/remove the legacy `camcore-jarvis` and `camcore-jarvis-ollama` containers;
+   keep `camcore-ai-gateway` running independently.
+6. Retain legacy Ollama volumes temporarily for rollback, then delete them only
+   after the rollback window expires.
+7. Archive or retire the legacy `camcoreau/jarvis` deployment after no production
+   stack references it.
 
 ## Backup and upgrade
 
