@@ -19,8 +19,8 @@ remain the approved upstream-based deployment.
 
 The service publishes no host port. Nginx Proxy Manager reaches port `8080` over
 the external `npm-backend` network. Open WebUI also joins `camcore-ai-backend` so
-it can continue reaching the temporary private Ollama migration backend without
-publishing Ollama port `11434`. The container requires outbound HTTPS access to
+it can reach both the temporary private Ollama migration backend and the private
+`camcore-ai-gateway`. The container requires outbound HTTPS access to
 `https://api.openai.com` for the primary OpenAI provider.
 
 ## Security posture
@@ -32,10 +32,14 @@ publishing Ollama port `11434`. The container requires outbound HTTPS access to
   pending and must not be admitted.
 - OpenAI at `https://api.openai.com/v1` is the primary managed inference provider.
   The provider credential is supplied only through `CAMCORE_AI_OPENAI_API_KEY` in
-  the production stack environment and must never be committed to Git.
+  the production Portainer stack environment and must never be committed to Git.
 - Private Ollama at `http://camcore-ollama:11434` remains enabled only during the
   OpenAI migration and rollback-validation period. Remove it after OpenAI has
   survived a full container recreation and normal production use is confirmed.
+- The private CamCore Operations Gateway at `http://camcore-ai-gateway:8100` is the
+  only globally configured external tool server. It exposes a reviewed read-only
+  OpenAPI surface and uses `CAMCORE_AI_GATEWAY_API_KEY` for service-to-service
+  bearer authentication.
 - `BYPASS_MODEL_ACCESS_CONTROL=true` is intentional for this approved provider
   set. Open WebUI v0.11 otherwise rejects raw provider models that have no local
   Workspace model row. Model admission is therefore controlled by Entra
@@ -44,16 +48,17 @@ publishing Ollama port `11434`. The container requires outbound HTTPS access to
   do not bypass the rest of Open WebUI's access-control checks.
 - Direct provider connections, OAuth token exchange, ID-token cookies, profile
   image forwarding and user-info forwarding are disabled.
-- Plugins, package installation, tool servers, terminal connections, user API
-  keys, code execution, web retrieval, uploads, image generation, memories,
-  notes, automations, sub-agents, channels and user webhooks remain disabled until
-  a reviewed CamCore integration requires a specific capability.
+- Plugins, package installation, terminal connections, user API keys, code
+  execution, web retrieval, uploads, image generation, memories, notes,
+  automations, sub-agents, channels and user webhooks remain disabled. Users also
+  cannot add arbitrary direct tool servers; the GitOps-controlled CamCore
+  Operations connection is the sole exception.
 - The container drops all Linux capabilities, uses `no-new-privileges`, a PID
   limit, bounded temporary storage and rotated Docker logs.
 - Audit output records metadata rather than prompt or response bodies.
 - Runtime configuration is environment-authoritative. Admin-panel changes do not
   survive restart; production settings must be represented in the compose file or
-  stack environment.
+  Portainer stack environment.
 - The CamCore banner and CamCore-specific starter prompts are therefore defined in
   the production compose so they are deterministic across redeployments.
 
@@ -90,8 +95,8 @@ Use the dedicated, single-tenant app registration named `CamCore AI`.
    assigned `CamCore.AI.User`.
 9. Request only `openid`, `email`, `profile` and `offline_access`. Do not grant
    broad Microsoft Graph application permissions to the sign-in app.
-10. Keep the Entra client secret only in the Dockge/Portainer stack environment or
-    the approved secret-management process.
+10. Keep the Entra client secret only in the Portainer stack environment or the
+    approved secret-management process.
 
 The browser performing OAuth must be able to resolve and reach
 `ai.camcore.network` after Microsoft redirects it back to the application. This
@@ -122,14 +127,15 @@ For the current Ganymede deployment this was verified as `172.21.0.0/16`; always
 recheck after network recreation rather than assuming the value remains unchanged.
 Never use `*`, `0.0.0.0/0` or the inference-network CIDR for proxy trust.
 
-Populate all eight required variables from `.env.example` in the production
-Dockge/Portainer stack environment:
+Populate all nine required variables from `.env.example` in the production
+Portainer stack environment:
 
 ```text
 CAMCORE_AI_MICROSOFT_TENANT_ID
 CAMCORE_AI_MICROSOFT_CLIENT_ID
 CAMCORE_AI_MICROSOFT_CLIENT_SECRET
 CAMCORE_AI_OPENAI_API_KEY
+CAMCORE_AI_GATEWAY_API_KEY
 CAMCORE_AI_WEBUI_SECRET_KEY
 CAMCORE_AI_OAUTH_SESSION_TOKEN_ENCRYPTION_KEY
 CAMCORE_AI_OAUTH_CLIENT_INFO_ENCRYPTION_KEY
@@ -142,10 +148,15 @@ rule applies to the Microsoft client secret and the three stable Open WebUI secr
 values. Generate the Open WebUI secrets independently with at least 32 random
 bytes and keep them unchanged across ordinary redeployments.
 
-With `ENABLE_PERSISTENT_CONFIG=false`, the OpenAI connection must come from these
-environment-controlled values. This is deliberate: a container restart or image
-replacement recreates the same approved provider configuration instead of relying
-on a transient Admin-panel change.
+`CAMCORE_AI_GATEWAY_API_KEY` must be a separate high-entropy secret; do not reuse
+the OpenAI project key, Entra client secret or WebUI encryption keys. Store the
+same gateway value in the `camcore-open-webui` and `camcore-jarvis` Portainer
+stack environments so Open WebUI can authenticate to the private gateway.
+
+With `ENABLE_PERSISTENT_CONFIG=false`, the OpenAI and CamCore Operations
+connections come from environment-controlled values. This is deliberate: a
+container restart or image replacement recreates the approved provider and tool
+configuration instead of relying on transient Admin-panel changes.
 
 ## 3. Internal DNS and Nginx Proxy Manager
 
@@ -203,14 +214,41 @@ The OpenAI key is never embedded in `compose.yaml`; the compose file references
 `CAMCORE_AI_OPENAI_API_KEY` and fails closed when that variable is missing.
 
 Open WebUI remains in offline mode for update/model-download behaviour. This does
-not disable external LLM provider API calls or Microsoft OAuth. Automatic Hugging
-Face model downloads remain blocked, so local RAG features must not be enabled
-until their embedding-model requirements have been deliberately designed.
+not disable external LLM provider API calls, Microsoft OAuth or fixed private tool
+server calls. Automatic Hugging Face model downloads remain blocked, so local RAG
+features must not be enabled until their embedding-model requirements have been
+deliberately designed.
 
-## 5. Deploy and accept
+## 5. CamCore Operations tools
 
-Deploy `deploy/camcore/compose.yaml` as a single-replica Dockge/Portainer stack.
-Do not scale it while this release uses SQLite and one Uvicorn worker.
+Production defines one OpenAPI tool-server connection:
+
+```text
+Name: CamCore Operations
+URL: http://camcore-ai-gateway:8100
+Schema: openapi.json
+Authentication: Bearer CAMCORE_AI_GATEWAY_API_KEY
+Network: camcore-ai-backend
+```
+
+The gateway is deployed from the `camcoreau/jarvis` production stack and must have
+no published host port or public hostname. Open WebUI resolves it by the Docker
+network alias `camcore-ai-gateway`.
+
+The initial gateway is deliberately **read-only**. It provides bounded operations
+for CamCore infrastructure, monitoring, logs, documentation and service status.
+Provider credentials and URLs are fixed server-side in the gateway stack; model
+arguments cannot replace them. User-created direct tool servers remain disabled.
+
+Do not add container restart, deployment, DNS change, Proxmox action, NetBird
+policy change, media deletion or other modifying operations to this generic
+OpenAPI connection. Those actions require an Open WebUI-native confirmation layer
+before production enablement.
+
+## 6. Deploy and accept
+
+Deploy `deploy/camcore/compose.yaml` as a single-replica **Portainer** stack. Do
+not scale it while this release uses SQLite and one Uvicorn worker.
 
 The change is accepted only after all of the following pass:
 
@@ -226,32 +264,40 @@ The change is accepted only after all of the following pass:
 7. A tenant user with no app role is denied or remains pending.
 8. OpenAI models are visible without re-entering the API key in Admin Settings and
    a basic chat completes successfully through `https://api.openai.com/v1`.
-9. Restart or recreate `camcore-open-webui`, then verify the OpenAI connection,
-   model list, CamCore banner and CamCore starter prompts all return automatically.
-10. Private Ollama remains available only as the temporary migration fallback; it
+9. `CamCore Operations` appears as the GitOps-controlled external tool server and
+   its schema loads from `http://camcore-ai-gateway:8100/openapi.json`.
+10. Asking Jarvis to **Check CamCore health** can invoke `get_camcore_health` and
+    unavailable integrations are reported as unavailable rather than healthy.
+11. Restart or recreate `camcore-open-webui`, then verify the OpenAI connection,
+    CamCore Operations connection, model list, banner and starter prompts all
+    return automatically.
+12. Private Ollama remains available only as the temporary migration fallback; it
     must not be exposed outside `camcore-ai-backend`.
-11. Local login/signup controls, uploads, sharing, user API keys, arbitrary tool
-    connections, code execution and web search are absent or rejected.
-12. Container logs contain no prompt bodies, responses, OAuth tokens or secret
+13. Local login/signup controls, uploads, sharing, user API keys, arbitrary tool
+    connections, modifying tools, code execution and web search are absent or
+    rejected.
+14. Container logs contain no prompt bodies, responses, OAuth tokens or secret
     values.
-13. The service is not reachable through the public `camcore.au` ingress.
-14. The loading screen, favicon, dark canvas, cyan/blue accents and raised surfaces
+15. The service is not reachable through the public `camcore.au` ingress.
+16. The loading screen, favicon, dark canvas, cyan/blue accents and raised surfaces
     visibly match the CamCore design language and the identity remains
     `Jarvis | CamCore AI`.
 
-## 6. Ollama retirement gate
+## 7. Ollama retirement gate
 
 Do not remove the legacy Ollama data immediately. Retire the Ollama inference path
-only after the OpenAI provider has passed the restart/recreation test above and has
-been stable in normal use.
+only after the OpenAI provider and CamCore Operations tool connection have passed
+the restart/recreation tests above and have been stable in normal use.
 
 The retirement sequence is:
 
 1. Confirm no CamCore workflow depends on the local Qwen/Ollama endpoint.
 2. Set `ENABLE_OLLAMA_API=false` and remove `OLLAMA_BASE_URL` from the production
    compose through a reviewed change.
-3. Redeploy and verify OpenAI chat, Entra sign-in and all health checks.
-4. Stop/remove the old Jarvis/Ollama containers.
+3. Redeploy and verify OpenAI chat, CamCore Operations tools, Entra sign-in and all
+   health checks.
+4. Stop/remove the old Jarvis/Ollama inference containers after the operations
+   gateway is independently running from the same immutable image.
 5. Retain the legacy Ollama volumes temporarily for rollback.
 6. Delete the legacy volumes only after the rollback window has expired.
 
@@ -266,12 +312,13 @@ For this single-replica SQLite release, take a cold encrypted backup:
 1. Stop `camcore-open-webui` cleanly.
 2. Snapshot or copy the complete `camcore-open-webui-data` volume while stopped.
 3. Verify backup integrity, encryption, retention and a restore test.
-4. Start the container and recheck health, Entra sign-in and one OpenAI chat.
+4. Start the container and recheck health, Entra sign-in, CamCore Operations and
+   one OpenAI chat.
 
 The CamCore branding image is a presentation-only layer over the approved upstream
 runtime. A visual-only rollback may pin the previous known-good Open WebUI image,
-but authentication, provider access and data compatibility must still be validated
-before the rollback is promoted.
+but authentication, provider access, tool access and data compatibility must still
+be validated before the rollback is promoted.
 
 Before an upgrade, verify the target upstream release and digest, review release
 notes and licensing, take a verified cold backup, rebuild the CamCore branding
