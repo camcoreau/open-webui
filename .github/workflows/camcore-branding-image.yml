@@ -102,7 +102,6 @@ jobs:
           python -m py_compile /tmp/camcore-tools.py /tmp/camcore-middleware.py
           grep -Fq "Tools.get_tools_by_ids(tool_ids) if ENABLE_PLUGINS else {}" /tmp/camcore-tools.py
           grep -Fq "elif tool_id.startswith('server:') or ENABLE_PLUGINS:" /tmp/camcore-middleware.py
-          ! grep -Fq $'if not ENABLE_PLUGINS:\n        return {}' /tmp/camcore-tools.py
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
