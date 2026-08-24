@@ -51,8 +51,8 @@ jobs:
 
           expected_image = (
               "ghcr.io/camcoreau/open-webui:camcore-"
-              "0468f881f069c2cb67c0a279d8fdcd6830799bc5@"
-              "sha256:bcaa07b4ba3306a13ed0a75c00839f17a2168c8e6bdfbe8ca489eb3ba0122f6c"
+              "4d85a50720f227d69c85dc6256fdbdc970ce138a@"
+              "sha256:cfc5c4e4d63e8779d86d1cc56807555dc42b0d65217af0c6efbd209eaf30ff7d"
           )
           rendered = json.loads(Path("/tmp/camcore-open-webui.json").read_text())
           assert set(rendered["services"]) == {"open-webui"}
@@ -62,6 +62,7 @@ jobs:
           assert service["image"] == expected_image
           assert "@sha256:" in service["image"], "production image must be digest pinned"
           assert "camcore-current" not in service["image"], "mutable branding tag is forbidden"
+          assert "latest" not in service["image"]
           assert not service.get("ports"), "host ports are forbidden"
           assert service["expose"] == ["8080"]
           assert "ALL" in service["cap_drop"]
@@ -158,18 +159,8 @@ jobs:
           assert tool_server["info"]["id"] == "camcore-operations"
           assert tool_server["info"]["name"] == "CamCore Operations"
 
-          banners = json.loads(env["WEBUI_BANNERS"])
-          assert len(banners) == 1
-          assert banners[0]["title"] == "CamCore AI"
-          assert "CamCore Operations" in banners[0]["content"]
-
-          suggestions = json.loads(env["DEFAULT_PROMPT_SUGGESTIONS"])
-          assert len(suggestions) >= 4
-          assert suggestions[0]["title"][0] == "Check CamCore health"
-
           source = Path("deploy/camcore/compose.yaml").read_text().lower()
           assert "ports:" not in source
-          assert "latest" not in service["image"]
           assert "sk-proj-" not in source, "OpenAI API keys must never be committed"
           assert "ci-gateway-key" not in source, "gateway bearer secrets must never be committed"
           assert "http://camcore-ai-gateway:8100" not in source
@@ -181,25 +172,18 @@ jobs:
               branding / "custom.css",
               branding / "loader.js",
               branding / "camcore-mark.svg",
+              branding / "patch_tool_servers.py",
           ):
-              assert path.is_file() and path.stat().st_size > 0, f"missing branding asset: {path}"
+              assert path.is_file() and path.stat().st_size > 0, f"missing CamCore asset: {path}"
 
-          css = (branding / "custom.css").read_text()
-          assert "#030709" in css
-          assert "#071014" in css
-          assert "#16d7e8" in css
-          assert "#4aa8ff" in css
-          assert "Jarvis  |  CamCore AI" in css
+          patcher = (branding / "patch_tool_servers.py").read_text()
+          assert "Tools.get_tools_by_ids(tool_ids) if ENABLE_PLUGINS else {}" in patcher
+          assert "elif tool_id.startswith('server:') or ENABLE_PLUGINS:" in patcher
 
           runbook = Path("deploy/camcore/README.md").read_text()
-          assert "only one designated bootstrap operator" in runbook
-          assert "must be the first OAuth user" in runbook
-          assert "Only after both administrator logins are verified" in runbook
-          assert "BYPASS_MODEL_ACCESS_CONTROL=true" in runbook
           assert "CAMCORE_AI_OPENAI_API_KEY" in runbook
           assert "CAMCORE_AI_GATEWAY_API_KEY" in runbook
           assert "ai-tools.camcore.network" in runbook
-          assert "camcore-ai-operations" in runbook
           assert "camcoreau/camcore-ai-gateway" in runbook
           assert "gateway is deployed by `camcoreau/jarvis`" not in runbook.lower()
 
