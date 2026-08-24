@@ -87,9 +87,11 @@ services:
       # Operations Gateway. Open WebUI reaches it through the private NPM HTTPS
       # endpoint and validates the TLS certificate. Docker Compose injects the
       # bearer secret before the JSON reaches Open WebUI; it is never committed.
+      # Read access is granted to authenticated Open WebUI users; Entra assignment
+      # and app roles remain the outer authorization boundary for CamCore AI.
       AIOHTTP_CLIENT_SESSION_TOOL_SERVER_SSL: "true"
       TOOL_SERVER_CONNECTIONS: >-
-        [{"url":"https://ai-tools.camcore.network","path":"openapi.json","type":"openapi","auth_type":"bearer","headers":null,"key":"${CAMCORE_AI_GATEWAY_API_KEY:?CAMCORE_AI_GATEWAY_API_KEY must be set}","config":{"enable":true},"info":{"id":"camcore-operations","name":"CamCore Operations","description":"Read-only CamCore infrastructure, monitoring, documentation and service operations tools."},"spec_type":"url"}]
+        [{"url":"https://ai-tools.camcore.network","path":"openapi.json","type":"openapi","auth_type":"bearer","headers":null,"key":"${CAMCORE_AI_GATEWAY_API_KEY:?CAMCORE_AI_GATEWAY_API_KEY must be set}","config":{"enable":true,"access_grants":[{"principal_type":"user","principal_id":"*","permission":"read"}]},"info":{"id":"camcore-operations","name":"CamCore Operations","description":"Read-only CamCore infrastructure, monitoring, documentation and service operations tools."},"spec_type":"url"}]
 
       # High-risk extension, execution, retrieval, and arbitrary egress surfaces stay off.
       # Global CamCore Operations tools above are fixed by GitOps; users cannot add

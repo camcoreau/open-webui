@@ -145,7 +145,16 @@ jobs:
           assert tool_server["spec_type"] == "url"
           assert tool_server["auth_type"] == "bearer"
           assert tool_server["key"] == "ci-gateway-key"
-          assert tool_server["config"] == {"enable": True}
+          assert tool_server["config"] == {
+              "enable": True,
+              "access_grants": [
+                  {
+                      "principal_type": "user",
+                      "principal_id": "*",
+                      "permission": "read",
+                  }
+              ],
+          }
           assert tool_server["info"]["id"] == "camcore-operations"
           assert tool_server["info"]["name"] == "CamCore Operations"
 
