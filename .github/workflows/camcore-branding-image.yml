@@ -40,17 +40,19 @@ jobs:
           loader=deploy/camcore/branding/loader.js
           manifest=deploy/camcore/branding/camcore-manifest.json
           patcher=deploy/camcore/branding/patch_runtime.py
+          tool_patcher=deploy/camcore/branding/patch_tool_servers.py
           verifier=deploy/camcore/branding/verify_assets.py
 
           grep -Fq 'FROM ghcr.io/open-webui/open-webui:v0.11.0@sha256:72c0ba641ba75e7aa52655cb242570906ececd09b1140fb736483038a22b3228' "$dockerfile"
           grep -Fq 'c652985eb0ada755c6a3940da5426d57c59b293a' "$dockerfile"
           grep -Fq 'https://camcore.au/assets/camcore-logo.png' "$dockerfile"
+          grep -Fq 'camcore-patch-tool-servers.py' "$dockerfile"
           grep -Fq '8e5f36f6b13021145449ff59cd95593650963921' "$verifier"
           grep -Fq '77b25f513e3bd501d6e2578b4c8bee73da0928e8' "$verifier"
           grep -Fq '5ec9b1ea22bd45c50ff159a5b4046eba424f67b6' "$verifier"
           grep -Fq '540a5b2a15dd3d9f830dd58555f6b653c12c5f29' "$verifier"
 
-          for path in "$css" "$loader" "$manifest" "$patcher" "$verifier" deploy/camcore/branding/camcore-mark.svg; do
+          for path in "$css" "$loader" "$manifest" "$patcher" "$tool_patcher" "$verifier" deploy/camcore/branding/camcore-mark.svg; do
             test -s "$path"
           done
 
@@ -72,6 +74,9 @@ jobs:
           grep -Fq '"name": "Jarvis | CamCore AI"' "$manifest"
           grep -Fq '"theme_color": "#071014"' "$manifest"
 
+          grep -Fq "Tools.get_tools_by_ids(tool_ids) if ENABLE_PLUGINS else {}" "$tool_patcher"
+          grep -Fq "elif tool_id.startswith('server:') or ENABLE_PLUGINS:" "$tool_patcher"
+
           # Runtime CSS/JS must not depend on the public CamCore website.
           ! grep -Eq 'https?://' "$css"
           ! grep -Eq 'https?://' "$loader"
@@ -84,6 +89,19 @@ jobs:
           python deploy/camcore/branding/patch_runtime.py /tmp/camcore-env.py
           ! grep -Fq "WEBUI_NAME += ' (Open WebUI)'" /tmp/camcore-env.py
           grep -Fq "WEBUI_FAVICON_URL = '/static/favicon.png'" /tmp/camcore-env.py
+
+      - name: Verify guarded external OpenAPI patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp backend/open_webui/utils/tools.py /tmp/camcore-tools.py
+          cp backend/open_webui/utils/middleware.py /tmp/camcore-middleware.py
+          python deploy/camcore/branding/patch_tool_servers.py \
+            /tmp/camcore-tools.py \
+            /tmp/camcore-middleware.py
+          python -m py_compile /tmp/camcore-tools.py /tmp/camcore-middleware.py
+          grep -Fq "Tools.get_tools_by_ids(tool_ids) if ENABLE_PLUGINS else {}" /tmp/camcore-tools.py
+          grep -Fq "elif tool_id.startswith('server:') or ENABLE_PLUGINS:" /tmp/camcore-middleware.py
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3

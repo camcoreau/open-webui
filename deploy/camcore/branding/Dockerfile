@@ -12,6 +12,7 @@ COPY deploy/camcore/branding/loader.js /app/build/static/loader.js
 COPY deploy/camcore/branding/camcore-mark.svg /app/build/static/camcore-mark.svg
 COPY deploy/camcore/branding/camcore-manifest.json /app/build/static/camcore-manifest.json
 COPY deploy/camcore/branding/patch_runtime.py /tmp/camcore-patch-runtime.py
+COPY deploy/camcore/branding/patch_tool_servers.py /tmp/camcore-patch-tool-servers.py
 COPY deploy/camcore/branding/verify_assets.py /tmp/camcore-verify-assets.py
 
 # Use the real production CamCore assets. They are downloaded only while the
@@ -33,6 +34,20 @@ RUN python /tmp/camcore-patch-runtime.py /app/backend/open_webui/env.py \
     && rm -f /tmp/camcore-patch-runtime.py \
     && ! grep -Fq "WEBUI_NAME += ' (Open WebUI)'" /app/backend/open_webui/env.py \
     && grep -Fq "WEBUI_FAVICON_URL = '/static/favicon.png'" /app/backend/open_webui/env.py
+
+# Keep arbitrary local Python plugins disabled while allowing authorised global
+# OpenAPI tool servers to use Open WebUI's existing external-tool resolver.
+RUN python /tmp/camcore-patch-tool-servers.py \
+      /app/backend/open_webui/utils/tools.py \
+      /app/backend/open_webui/utils/middleware.py \
+    && rm -f /tmp/camcore-patch-tool-servers.py \
+    && python -m py_compile \
+      /app/backend/open_webui/utils/tools.py \
+      /app/backend/open_webui/utils/middleware.py \
+    && grep -Fq "Tools.get_tools_by_ids(tool_ids) if ENABLE_PLUGINS else {}" \
+      /app/backend/open_webui/utils/tools.py \
+    && grep -Fq "elif tool_id.startswith('server:') or ENABLE_PLUGINS:" \
+      /app/backend/open_webui/utils/middleware.py
 
 RUN test -s /app/build/static/custom.css \
     && test -s /app/build/static/loader.js \
