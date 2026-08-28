@@ -326,7 +326,6 @@ class ResponsesPatchTests(unittest.TestCase):
                     'caller': {'type': 'direct'},
                     'name': 'health_check',
                     'namespace': 'camcore',
-                    'status': 'completed',
                 },
             ],
         )
@@ -405,16 +404,18 @@ class ResponsesPatchTests(unittest.TestCase):
             }
         )
 
-        self.assertEqual(
-            result['input'][1:],
-            second_items,
-        )
+        expected_second_items = copy.deepcopy(second_items)
+        for item in expected_second_items:
+            if item.get('type') == 'function_call_output':
+                item.pop('status', None)
+
+        self.assertEqual(result['input'][1:], expected_second_items)
         self.assertEqual(
             [item.get('id') for item in result['input'] if item.get('id') == 'rs_1'],
             ['rs_1'],
         )
 
-    def test_preserves_only_provider_valid_function_output_status(self) -> None:
+    def test_drops_returned_function_output_status_for_replay(self) -> None:
         def converted_output(status: str) -> dict:
             result = self.converter(
                 {
@@ -438,10 +439,93 @@ class ResponsesPatchTests(unittest.TestCase):
             )
             return result['input'][0]
 
-        self.assertEqual(converted_output('completed')['status'], 'completed')
-        invalid_status = converted_output('failed')
-        self.assertEqual(invalid_status['id'], 'fco_1')
-        self.assertNotIn('status', invalid_status)
+        completed = converted_output('completed')
+        self.assertEqual(completed['id'], 'fco_1')
+        self.assertNotIn('status', completed)
+
+        invalid = converted_output('failed')
+        self.assertEqual(invalid['id'], 'fco_1')
+        self.assertNotIn('status', invalid)
+
+    def test_live_index_six_replay_drops_only_function_output_status(self) -> None:
+        result = self.converter(
+            {
+                'model': 'gpt-5.6-luna',
+                'messages': [
+                    {'role': 'system', 'content': 'Follow CamCore operating policy.'},
+                    {'role': 'developer', 'content': 'Use the health tool for current state.'},
+                    {'role': 'assistant', 'content': 'I will check the current health.'},
+                    {'role': 'user', 'content': 'Check CamCore health'},
+                    {
+                        'role': 'assistant',
+                        'content': '',
+                        'output': [
+                            {
+                                'id': 'rs_live',
+                                'type': 'reasoning',
+                                'status': 'completed',
+                                'summary': [],
+                                'encrypted_content': 'opaque-live-reasoning',
+                            },
+                            {
+                                'id': 'msg_live',
+                                'type': 'message',
+                                'status': 'completed',
+                                'role': 'assistant',
+                                'phase': 'commentary',
+                                'content': [{'type': 'output_text', 'text': 'Checking CamCore.'}],
+                            },
+                            {
+                                'id': 'fc_live',
+                                'type': 'function_call',
+                                'status': 'completed',
+                                'call_id': 'call_live_health',
+                                'name': 'get_camcore_health',
+                                'arguments': '{}',
+                                'caller': {'type': 'direct'},
+                                'namespace': 'camcore.operations',
+                            },
+                            {
+                                'id': 'fco_live',
+                                'type': 'function_call_output',
+                                'status': 'completed',
+                                'call_id': 'call_live_health',
+                                'output': [{'type': 'input_text', 'text': '{"status":"healthy"}'}],
+                                'caller': {'type': 'direct'},
+                                'name': 'get_camcore_health',
+                                'namespace': 'camcore.operations',
+                            },
+                        ],
+                        '_camcore_responses_replay': 'output',
+                    },
+                    {
+                        'role': 'tool',
+                        'tool_call_id': 'call_live_health',
+                        'content': '{"status":"healthy"}',
+                        '_camcore_responses_replay': 'skip',
+                    },
+                ],
+            }
+        )
+
+        self.assertEqual(len(result['input']), 7)
+        self.assertEqual(result['input'][3]['encrypted_content'], 'opaque-live-reasoning')
+        self.assertEqual(result['input'][3]['status'], 'completed')
+        self.assertEqual(result['input'][4]['phase'], 'commentary')
+        self.assertEqual(result['input'][4]['status'], 'completed')
+        self.assertEqual(result['input'][5]['status'], 'completed')
+        self.assertEqual(
+            result['input'][6],
+            {
+                'id': 'fco_live',
+                'type': 'function_call_output',
+                'call_id': 'call_live_health',
+                'output': [{'type': 'input_text', 'text': '{"status":"healthy"}'}],
+                'caller': {'type': 'direct'},
+                'name': 'get_camcore_health',
+                'namespace': 'camcore.operations',
+            },
+        )
 
     def test_drops_only_a_trailing_empty_placeholder(self) -> None:
         non_trailing_empty = {
