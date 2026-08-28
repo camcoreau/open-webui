@@ -51,16 +51,25 @@ RUN python /tmp/camcore-patch-tool-servers.py \
     && grep -Fq "elif tool_id.startswith('server:') or ENABLE_PLUGINS:" \
       /app/backend/open_webui/utils/middleware.py
 
-# OpenAI requires reasoning effort to be nested in Responses API requests.
-# Keep Open WebUI's standard model setting usable when function tools are on.
+# Keep Responses requests stateless/private and replay the completed encrypted
+# reasoning item before a function result. Chat Completions remains unchanged.
 RUN python /tmp/camcore-patch-openai-responses.py \
       /app/backend/open_webui/routers/openai.py \
+      /app/backend/open_webui/utils/middleware.py \
     && rm -f /tmp/camcore-patch-openai-responses.py \
-    && python -m py_compile /app/backend/open_webui/routers/openai.py \
+    && python -m py_compile \
+      /app/backend/open_webui/routers/openai.py \
+      /app/backend/open_webui/utils/middleware.py \
     && grep -Fq "responses_payload.pop('reasoning_effort', None)" \
       /app/backend/open_webui/routers/openai.py \
     && grep -Fq "responses_payload['reasoning'] = {'effort': reasoning_effort}" \
-      /app/backend/open_webui/routers/openai.py
+      /app/backend/open_webui/routers/openai.py \
+    && grep -Fq "responses_payload['store'] = False" \
+      /app/backend/open_webui/routers/openai.py \
+    && grep -Fq "include.append('reasoning.encrypted_content')" \
+      /app/backend/open_webui/routers/openai.py \
+    && grep -Fq "_attach_camcore_responses_replay(tool_messages, full_output())" \
+      /app/backend/open_webui/utils/middleware.py
 
 RUN test -s /app/build/static/custom.css \
     && test -s /app/build/static/loader.js \

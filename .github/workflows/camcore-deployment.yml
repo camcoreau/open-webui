@@ -184,6 +184,9 @@ jobs:
 
           responses_patcher = (branding / "patch_openai_responses.py").read_text()
           assert "responses_payload.pop('reasoning_effort', None)" in responses_patcher
+          assert "responses_payload['store'] = False" in responses_patcher
+          assert "include.append('reasoning.encrypted_content')" in responses_patcher
+          assert "_attach_camcore_responses_replay" in responses_patcher
 
           runbook = Path("deploy/camcore/README.md").read_text()
           assert "CAMCORE_AI_OPENAI_API_KEY" in runbook

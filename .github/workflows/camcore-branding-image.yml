@@ -88,6 +88,9 @@ jobs:
           grep -Fq "Tools.get_tools_by_ids(tool_ids) if ENABLE_PLUGINS else {}" "$tool_patcher"
           grep -Fq "elif tool_id.startswith('server:') or ENABLE_PLUGINS:" "$tool_patcher"
           grep -Fq "responses_payload.pop('reasoning_effort', None)" "$responses_patcher"
+          grep -Fq "responses_payload['store'] = False" "$responses_patcher"
+          grep -Fq "include.append('reasoning.encrypted_content')" "$responses_patcher"
+          grep -Fq '_attach_camcore_responses_replay' "$responses_patcher"
 
           # Runtime CSS/JS must not depend on the public CamCore website.
           ! grep -Eq 'https?://' "$css"
@@ -155,12 +158,20 @@ jobs:
         run: |
           set -euo pipefail
           cp "$RUNNER_TEMP/camcore-upstream/routers/openai.py" /tmp/camcore-openai.py
-          python deploy/camcore/branding/patch_openai_responses.py /tmp/camcore-openai.py
-          python -m py_compile /tmp/camcore-openai.py
+          test -s /tmp/camcore-middleware.py
+          python deploy/camcore/branding/patch_openai_responses.py \
+            /tmp/camcore-openai.py \
+            /tmp/camcore-middleware.py
+          python -m py_compile /tmp/camcore-openai.py /tmp/camcore-middleware.py
           grep -Fq "responses_payload.pop('reasoning_effort', None)" /tmp/camcore-openai.py
           grep -Fq "responses_payload['reasoning'] = {'effort': reasoning_effort}" /tmp/camcore-openai.py
-          CAMCORE_OPENAI_SOURCE="$RUNNER_TEMP/camcore-upstream/routers/openai.py" \
-            python deploy/camcore/branding/test_patch_openai_responses.py
+          grep -Fq "responses_payload['store'] = False" /tmp/camcore-openai.py
+          grep -Fq "include.append('reasoning.encrypted_content')" /tmp/camcore-openai.py
+          grep -Fq '_attach_camcore_responses_replay(tool_messages, full_output())' \
+            /tmp/camcore-middleware.py
+          export CAMCORE_OPENAI_SOURCE=/tmp/camcore-openai.py
+          export CAMCORE_MIDDLEWARE_SOURCE=/tmp/camcore-middleware.py
+          python deploy/camcore/branding/test_patch_openai_responses.py
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
