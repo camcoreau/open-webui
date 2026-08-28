@@ -51,8 +51,8 @@ jobs:
 
           expected_image = (
               "ghcr.io/camcoreau/open-webui:camcore-"
-              "4d85a50720f227d69c85dc6256fdbdc970ce138a@"
-              "sha256:cfc5c4e4d63e8779d86d1cc56807555dc42b0d65217af0c6efbd209eaf30ff7d"
+              "b39c34aa046ae30dad06a90f85d2b28fd49eaa4e@"
+              "sha256:d3b91ee293827ec7d5cbc4967e3623361f220923979d74b5fcfba03b633f40e4"
           )
           rendered = json.loads(Path("/tmp/camcore-open-webui.json").read_text())
           assert set(rendered["services"]) == {"open-webui"}
@@ -132,6 +132,7 @@ jobs:
                   "prefix_id": "",
                   "model_ids": [],
                   "connection_type": "external",
+                  "api_type": "responses",
                   "auth_type": "bearer",
                   "passthrough_params": [],
               }
