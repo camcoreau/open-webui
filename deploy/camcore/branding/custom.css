@@ -9,90 +9,97 @@
 html.light,
 html.dark,
 html.her {
-  color-scheme: dark;
+	color-scheme: dark;
 
-  --camcore-ink: #f7fbff;
-  --camcore-ink-soft: #d9e8f2;
-  --camcore-muted: #9cb1c1;
-  --camcore-quiet: #708899;
-  --camcore-canvas: #030709;
-  --camcore-canvas-raised: #071014;
-  --camcore-surface: rgba(10, 22, 28, 0.88);
-  --camcore-surface-solid: #0b171d;
-  --camcore-surface-soft: rgba(255, 255, 255, 0.038);
-  --camcore-surface-hover: rgba(255, 255, 255, 0.07);
-  --camcore-line: rgba(178, 218, 231, 0.14);
-  --camcore-line-strong: rgba(178, 218, 231, 0.28);
-  --camcore-cyan: #16d7e8;
-  --camcore-cyan-light: #98f4fb;
-  --camcore-blue: #4aa8ff;
-  --camcore-green: #5ee39c;
-  --camcore-amber: #ffc967;
-  --camcore-red: #ff8298;
-  --camcore-focus: #adf7ff;
-  --camcore-shadow-lg: 0 38px 110px rgba(0, 0, 0, 0.48);
-  --camcore-shadow-md: 0 20px 60px rgba(0, 0, 0, 0.34);
-  --camcore-radius-xl: 32px;
-  --camcore-radius-lg: 22px;
-  --camcore-radius-md: 15px;
+	--camcore-ink: #f7fbff;
+	--camcore-ink-soft: #d9e8f2;
+	--camcore-muted: #9cb1c1;
+	--camcore-quiet: #708899;
+	--camcore-canvas: #030709;
+	--camcore-canvas-raised: #071014;
+	--camcore-surface: rgba(10, 22, 28, 0.88);
+	--camcore-surface-solid: #0b171d;
+	--camcore-surface-soft: rgba(255, 255, 255, 0.038);
+	--camcore-surface-hover: rgba(255, 255, 255, 0.07);
+	--camcore-line: rgba(178, 218, 231, 0.14);
+	--camcore-line-strong: rgba(178, 218, 231, 0.28);
+	--camcore-cyan: #16d7e8;
+	--camcore-cyan-light: #98f4fb;
+	--camcore-blue: #4aa8ff;
+	--camcore-green: #5ee39c;
+	--camcore-amber: #ffc967;
+	--camcore-red: #ff8298;
+	--camcore-focus: #adf7ff;
+	--camcore-shadow-lg: 0 38px 110px rgba(0, 0, 0, 0.48);
+	--camcore-shadow-md: 0 20px 60px rgba(0, 0, 0, 0.34);
+	--camcore-radius-xl: 32px;
+	--camcore-radius-lg: 22px;
+	--camcore-radius-md: 15px;
 
-  /* Re-map Open WebUI's neutral system into the CamCore palette. */
-  --color-gray-50: #f7fbff;
-  --color-gray-100: #edf7fb;
-  --color-gray-200: #d9e8f2;
-  --color-gray-300: #b8cedb;
-  --color-gray-400: #9cb1c1;
-  --color-gray-500: #708899;
-  --color-gray-600: #526a78;
-  --color-gray-700: #243942;
-  --color-gray-800: #13252d;
-  --color-gray-850: #0b171d;
-  --color-gray-900: #071014;
-  --color-gray-950: #030709;
+	/* Re-map Open WebUI's neutral system into the CamCore palette. */
+	--color-gray-50: #f7fbff;
+	--color-gray-100: #edf7fb;
+	--color-gray-200: #d9e8f2;
+	--color-gray-300: #b8cedb;
+	--color-gray-400: #9cb1c1;
+	--color-gray-500: #708899;
+	--color-gray-600: #526a78;
+	--color-gray-700: #243942;
+	--color-gray-800: #13252d;
+	--color-gray-850: #0b171d;
+	--color-gray-900: #071014;
+	--color-gray-950: #030709;
 }
 
 html,
 body {
-  min-height: 100%;
-  background: var(--camcore-canvas) !important;
-  color: var(--camcore-ink) !important;
+	min-height: 100%;
+	background: var(--camcore-canvas) !important;
+	color: var(--camcore-ink) !important;
 }
 
 body {
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
-  background-image:
-    radial-gradient(circle at 8% 0%, rgba(22, 215, 232, 0.13), transparent 32rem),
-    radial-gradient(circle at 90% 4%, rgba(74, 168, 255, 0.09), transparent 35rem),
-    linear-gradient(180deg, #030709 0%, #061015 54%, #030709 100%) !important;
-  background-attachment: fixed !important;
+	font-family:
+		Inter,
+		ui-sans-serif,
+		system-ui,
+		-apple-system,
+		BlinkMacSystemFont,
+		'Segoe UI',
+		sans-serif !important;
+	background-image:
+		radial-gradient(circle at 8% 0%, rgba(22, 215, 232, 0.13), transparent 32rem),
+		radial-gradient(circle at 90% 4%, rgba(74, 168, 255, 0.09), transparent 35rem),
+		linear-gradient(180deg, #030709 0%, #061015 54%, #030709 100%) !important;
+	background-attachment: fixed !important;
 }
 
 body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  opacity: 0.7;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.016) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.016) 1px, transparent 1px);
-  background-size: 64px 64px;
-  mask-image: linear-gradient(to bottom, #000 0%, transparent 78%);
+	content: '';
+	position: fixed;
+	inset: 0;
+	z-index: -1;
+	pointer-events: none;
+	opacity: 0.7;
+	background-image:
+		linear-gradient(rgba(255, 255, 255, 0.016) 1px, transparent 1px),
+		linear-gradient(90deg, rgba(255, 255, 255, 0.016) 1px, transparent 1px);
+	background-size: 64px 64px;
+	mask-image: linear-gradient(to bottom, #000 0%, transparent 78%);
 }
 
 ::selection {
-  color: #001014;
-  background: var(--camcore-cyan-light);
+	color: #001014;
+	background: var(--camcore-cyan-light);
 }
 
 :focus-visible {
-  outline: 3px solid var(--camcore-focus) !important;
-  outline-offset: 3px !important;
+	outline: 3px solid var(--camcore-focus) !important;
+	outline-offset: 3px !important;
 }
 
 a {
-  text-underline-offset: 0.18em;
+	text-underline-offset: 0.18em;
 }
 
 button,
@@ -100,14 +107,14 @@ a,
 input,
 textarea,
 select,
-[role="button"] {
-  transition:
-    background-color 0.18s ease,
-    border-color 0.18s ease,
-    color 0.18s ease,
-    box-shadow 0.18s ease,
-    opacity 0.18s ease,
-    transform 0.18s ease;
+[role='button'] {
+	transition:
+		background-color 0.18s ease,
+		border-color 0.18s ease,
+		color 0.18s ease,
+		box-shadow 0.18s ease,
+		opacity 0.18s ease,
+		transform 0.18s ease;
 }
 
 /* Managed dark application shell. */
@@ -118,11 +125,11 @@ select,
 .dark .dark\:bg-gray-900,
 .dark .dark\:bg-gray-850,
 .dark .dark\:bg-gray-800 {
-  background-color: rgba(7, 16, 20, 0.92) !important;
+	background-color: rgba(7, 16, 20, 0.92) !important;
 }
 
-[class*="border-gray-"] {
-  border-color: var(--camcore-line) !important;
+[class*='border-gray-'] {
+	border-color: var(--camcore-line) !important;
 }
 
 .text-black,
@@ -131,21 +138,21 @@ select,
 .dark .dark\:text-white,
 .dark .dark\:text-gray-100,
 .dark .dark\:text-gray-200 {
-  color: var(--camcore-ink) !important;
+	color: var(--camcore-ink) !important;
 }
 
 .text-gray-700,
 .text-gray-600,
 .dark .dark\:text-gray-300,
 .dark .dark\:text-gray-400 {
-  color: var(--camcore-muted) !important;
+	color: var(--camcore-muted) !important;
 }
 
 .text-gray-500,
 .text-gray-400,
 .dark .dark\:text-gray-500,
 .dark .dark\:text-gray-600 {
-  color: var(--camcore-quiet) !important;
+	color: var(--camcore-quiet) !important;
 }
 
 /* Primary and selected actions use the same restrained CamCore accent system. */
@@ -153,440 +160,449 @@ select,
 .bg-blue-500,
 .hover\:bg-blue-700:hover,
 .hover\:bg-blue-600:hover {
-  color: #001014 !important;
-  background: linear-gradient(135deg, rgba(22, 215, 232, 0.98), rgba(74, 168, 255, 0.94)) !important;
-  box-shadow: 0 10px 30px rgba(22, 215, 232, 0.13);
+	color: #001014 !important;
+	background: linear-gradient(
+		135deg,
+		rgba(22, 215, 232, 0.98),
+		rgba(74, 168, 255, 0.94)
+	) !important;
+	box-shadow: 0 10px 30px rgba(22, 215, 232, 0.13);
 }
 
 .bg-blue-600:hover,
 .bg-blue-500:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 14px 36px rgba(22, 215, 232, 0.2);
+	transform: translateY(-1px);
+	box-shadow: 0 14px 36px rgba(22, 215, 232, 0.2);
 }
 
 .text-blue-500,
 .text-blue-600,
 .text-blue-700,
 .dark .dark\:text-blue-400 {
-  color: var(--camcore-cyan-light) !important;
+	color: var(--camcore-cyan-light) !important;
 }
 
 .border-blue-500,
 .border-blue-600 {
-  border-color: rgba(22, 215, 232, 0.62) !important;
+	border-color: rgba(22, 215, 232, 0.62) !important;
 }
 
 .bg-green-500 {
-  background-color: var(--camcore-green) !important;
+	background-color: var(--camcore-green) !important;
 }
 
 .text-red-500,
 .text-red-600,
 .dark .dark\:text-red-400 {
-  color: var(--camcore-red) !important;
+	color: var(--camcore-red) !important;
 }
 
 /* Inputs and editable surfaces. */
-input:not([type="checkbox"]):not([type="radio"]),
+input:not([type='checkbox']):not([type='radio']),
 textarea,
 select,
-[contenteditable="true"] {
-  color: var(--camcore-ink) !important;
-  border-color: var(--camcore-line) !important;
-  background-color: rgba(11, 23, 29, 0.9) !important;
+[contenteditable='true'] {
+	color: var(--camcore-ink) !important;
+	border-color: var(--camcore-line) !important;
+	background-color: rgba(11, 23, 29, 0.9) !important;
 }
 
 input::placeholder,
 textarea::placeholder,
-[contenteditable="true"][data-placeholder]::before {
-  color: var(--camcore-quiet) !important;
+[contenteditable='true'][data-placeholder]::before {
+	color: var(--camcore-quiet) !important;
 }
 
-input[type="checkbox"],
-input[type="radio"] {
-  accent-color: var(--camcore-cyan);
+input[type='checkbox'],
+input[type='radio'] {
+	accent-color: var(--camcore-cyan);
 }
 
 /* Sidebar: compact operations-console treatment, exact CamCore identity asset. */
 #sidebar {
-  background: rgba(3, 10, 13, 0.88) !important;
-  border-color: var(--camcore-line) !important;
-  box-shadow: 14px 0 42px rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(24px) saturate(135%);
+	background: rgba(3, 10, 13, 0.88) !important;
+	border-color: var(--camcore-line) !important;
+	box-shadow: 14px 0 42px rgba(0, 0, 0, 0.2);
+	backdrop-filter: blur(24px) saturate(135%);
 }
 
 #sidebar > div,
 #sidebar .sidebar {
-  border-color: var(--camcore-line) !important;
+	border-color: var(--camcore-line) !important;
 }
 
 #sidebar .sidebar {
-  background: linear-gradient(180deg, rgba(3, 10, 13, 0.98), rgba(3, 10, 13, 0.78)) !important;
+	background: linear-gradient(180deg, rgba(3, 10, 13, 0.98), rgba(3, 10, 13, 0.78)) !important;
 }
 
 #sidebar-webui-name {
-  color: var(--camcore-ink) !important;
-  font-weight: 760 !important;
-  letter-spacing: -0.015em;
+	color: var(--camcore-ink) !important;
+	font-weight: 760 !important;
+	letter-spacing: -0.015em;
 }
 
 #sidebar-webui-name::after {
-  content: "PRIVATE AI WORKSPACE";
-  display: block;
-  margin-top: -1px;
-  color: var(--camcore-cyan-light);
-  font-size: 8px;
-  font-weight: 800;
-  line-height: 1.15;
-  letter-spacing: 0.13em;
+	content: 'PRIVATE AI WORKSPACE';
+	display: block;
+	margin-top: -1px;
+	color: var(--camcore-cyan-light);
+	font-size: 8px;
+	font-weight: 800;
+	line-height: 1.15;
+	letter-spacing: 0.13em;
 }
 
 #sidebar img.sidebar-new-chat-icon {
-  border-radius: 8px !important;
-  filter: drop-shadow(0 5px 12px rgba(22, 215, 232, 0.13));
+	border-radius: 8px !important;
+	filter: drop-shadow(0 5px 12px rgba(22, 215, 232, 0.13));
 }
 
 #sidebar-new-chat-button,
 #sidebar-search-button,
 #sidebar-chat-item,
-#sidebar [id^="sidebar-"][id$="-button"] {
-  border: 1px solid transparent !important;
+#sidebar [id^='sidebar-'][id$='-button'] {
+	border: 1px solid transparent !important;
 }
 
 #sidebar-new-chat-button:hover,
 #sidebar-search-button:hover,
 #sidebar-chat-item:hover,
-#sidebar [id^="sidebar-"][id$="-button"]:hover,
+#sidebar [id^='sidebar-'][id$='-button']:hover,
 .app-interactive-active,
 .dark .dark\:hover\:bg-gray-800:hover,
 .dark .dark\:hover\:bg-gray-850:hover,
 .dark .dark\:hover\:bg-gray-900:hover {
-  color: var(--camcore-ink) !important;
-  border-color: rgba(178, 218, 231, 0.1) !important;
-  background: var(--camcore-surface-hover) !important;
+	color: var(--camcore-ink) !important;
+	border-color: rgba(178, 218, 231, 0.1) !important;
+	background: var(--camcore-surface-hover) !important;
 }
 
-#sidebar-chat-item[aria-current="page"],
+#sidebar-chat-item[aria-current='page'],
 #sidebar-chat-item.active {
-  color: var(--camcore-cyan-light) !important;
-  background: linear-gradient(135deg, rgba(22, 215, 232, 0.1), rgba(74, 168, 255, 0.06)) !important;
+	color: var(--camcore-cyan-light) !important;
+	background: linear-gradient(135deg, rgba(22, 215, 232, 0.1), rgba(74, 168, 255, 0.06)) !important;
 }
 
 /* Chat composer: raised CamCore command surface. */
 body:not(:has(#auth-page)) form:has(#chat-input) {
-  gap: 0.55rem !important;
+	gap: 0.55rem !important;
 }
 
 body:not(:has(#auth-page)) form:has(#chat-input) > div:last-child,
-body:not(:has(#auth-page)) form:has(#chat-input) [class*="rounded-"][class*="border"] {
-  border-color: var(--camcore-line) !important;
+body:not(:has(#auth-page)) form:has(#chat-input) [class*='rounded-'][class*='border'] {
+	border-color: var(--camcore-line) !important;
 }
 
 #chat-input {
-  color: var(--camcore-ink) !important;
-  caret-color: var(--camcore-cyan-light) !important;
+	color: var(--camcore-ink) !important;
+	caret-color: var(--camcore-cyan-light) !important;
 }
 
 #chat-input:focus {
-  outline: none !important;
+	outline: none !important;
 }
 
 body:not(:has(#auth-page)) form:has(#chat-input) {
-  position: relative;
+	position: relative;
 }
 
 body:not(:has(#auth-page)) form:has(#chat-input)::before {
-  content: "";
-  position: absolute;
-  inset: -7px -6px;
-  z-index: -1;
-  border: 1px solid var(--camcore-line);
-  border-radius: 26px;
-  background: rgba(7, 16, 20, 0.76);
-  box-shadow: 0 18px 52px rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(22px) saturate(130%);
-  pointer-events: none;
+	content: '';
+	position: absolute;
+	inset: -7px -6px;
+	z-index: -1;
+	border: 1px solid var(--camcore-line);
+	border-radius: 26px;
+	background: rgba(7, 16, 20, 0.76);
+	box-shadow: 0 18px 52px rgba(0, 0, 0, 0.28);
+	backdrop-filter: blur(22px) saturate(130%);
+	pointer-events: none;
 }
 
 /* Empty/new-chat state feels intentional rather than stock. */
 body:not(:has(#auth-page)) .m-auto.w-full.max-w-\[58rem\] {
-  position: relative;
+	position: relative;
 }
 
 body:not(:has(#auth-page)) .m-auto.w-full.max-w-\[58rem\]::before {
-  content: "CAMCORE AI";
-  display: inline-flex;
-  margin-bottom: 0.55rem;
-  padding: 0.38rem 0.66rem;
-  border: 1px solid rgba(22, 215, 232, 0.28);
-  border-radius: 999px;
-  color: var(--camcore-cyan-light);
-  background: linear-gradient(135deg, rgba(22, 215, 232, 0.08), rgba(74, 168, 255, 0.05));
-  font-size: 0.64rem;
-  font-weight: 820;
-  letter-spacing: 0.15em;
+	content: 'CAMCORE AI';
+	display: inline-flex;
+	margin-bottom: 0.55rem;
+	padding: 0.38rem 0.66rem;
+	border: 1px solid rgba(22, 215, 232, 0.28);
+	border-radius: 999px;
+	color: var(--camcore-cyan-light);
+	background: linear-gradient(135deg, rgba(22, 215, 232, 0.08), rgba(74, 168, 255, 0.05));
+	font-size: 0.64rem;
+	font-weight: 820;
+	letter-spacing: 0.15em;
 }
 
 /* Markdown, code, tables and quoted material use CamCore documentation surfaces. */
 .markdown a,
 .prose a {
-  color: var(--camcore-cyan-light) !important;
-  text-decoration-color: rgba(22, 215, 232, 0.38) !important;
+	color: var(--camcore-cyan-light) !important;
+	text-decoration-color: rgba(22, 215, 232, 0.38) !important;
 }
 
 .markdown a:hover,
 .prose a:hover {
-  color: #d8fcff !important;
-  text-decoration-color: var(--camcore-cyan-light) !important;
+	color: #d8fcff !important;
+	text-decoration-color: var(--camcore-cyan-light) !important;
 }
 
 .markdown pre,
 .prose pre,
 .markdown table,
 .prose table {
-  border: 1px solid var(--camcore-line) !important;
-  border-radius: var(--camcore-radius-md) !important;
-  background: rgba(3, 10, 13, 0.82) !important;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+	border: 1px solid var(--camcore-line) !important;
+	border-radius: var(--camcore-radius-md) !important;
+	background: rgba(3, 10, 13, 0.82) !important;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
 }
 
 .markdown code:not(pre code),
 .prose code:not(pre code) {
-  color: var(--camcore-cyan-light) !important;
-  border: 1px solid rgba(178, 218, 231, 0.11);
-  border-radius: 6px;
-  background: rgba(22, 215, 232, 0.055) !important;
+	color: var(--camcore-cyan-light) !important;
+	border: 1px solid rgba(178, 218, 231, 0.11);
+	border-radius: 6px;
+	background: rgba(22, 215, 232, 0.055) !important;
 }
 
 .markdown blockquote,
 .prose blockquote {
-  color: var(--camcore-ink-soft) !important;
-  border-left-color: var(--camcore-cyan) !important;
-  background: rgba(22, 215, 232, 0.035);
+	color: var(--camcore-ink-soft) !important;
+	border-left-color: var(--camcore-cyan) !important;
+	background: rgba(22, 215, 232, 0.035);
 }
 
 .markdown hr,
 .prose hr {
-  border-color: var(--camcore-line) !important;
+	border-color: var(--camcore-line) !important;
 }
 
 /* Dialogs, menus, command palettes and toasts share one raised-surface language. */
-[role="dialog"],
-[role="menu"],
-[role="listbox"],
+[role='dialog'],
+[role='menu'],
+[role='listbox'],
 [data-radix-popper-content-wrapper] > div {
-  color: var(--camcore-ink) !important;
-  border-color: var(--camcore-line) !important;
-  background: rgba(7, 16, 20, 0.97) !important;
-  box-shadow: var(--camcore-shadow-md) !important;
-  backdrop-filter: blur(24px) saturate(135%);
+	color: var(--camcore-ink) !important;
+	border-color: var(--camcore-line) !important;
+	background: rgba(7, 16, 20, 0.97) !important;
+	box-shadow: var(--camcore-shadow-md) !important;
+	backdrop-filter: blur(24px) saturate(135%);
 }
 
-[role="dialog"] {
-  border-radius: var(--camcore-radius-lg) !important;
+[role='dialog'] {
+	border-radius: var(--camcore-radius-lg) !important;
 }
 
-[role="menu"],
-[role="listbox"] {
-  border-radius: var(--camcore-radius-md) !important;
+[role='menu'],
+[role='listbox'] {
+	border-radius: var(--camcore-radius-md) !important;
 }
 
 [data-sonner-toaster] [data-sonner-toast] {
-  color: var(--camcore-ink) !important;
-  border: 1px solid var(--camcore-line) !important;
-  border-radius: var(--camcore-radius-md) !important;
-  background: rgba(7, 16, 20, 0.96) !important;
-  box-shadow: var(--camcore-shadow-md) !important;
-  backdrop-filter: blur(20px);
+	color: var(--camcore-ink) !important;
+	border: 1px solid var(--camcore-line) !important;
+	border-radius: var(--camcore-radius-md) !important;
+	background: rgba(7, 16, 20, 0.96) !important;
+	box-shadow: var(--camcore-shadow-md) !important;
+	backdrop-filter: blur(20px);
 }
 
 /* Entra-only sign-in fallback/error page. Normal SSO flow auto-redirects. */
 #auth-page {
-  color: var(--camcore-ink) !important;
-  background:
-    radial-gradient(circle at 15% 8%, rgba(22, 215, 232, 0.17), transparent 30rem),
-    radial-gradient(circle at 88% 10%, rgba(74, 168, 255, 0.11), transparent 32rem),
-    linear-gradient(180deg, #030709 0%, #071014 58%, #030709 100%) !important;
+	color: var(--camcore-ink) !important;
+	background:
+		radial-gradient(circle at 15% 8%, rgba(22, 215, 232, 0.17), transparent 30rem),
+		radial-gradient(circle at 88% 10%, rgba(74, 168, 255, 0.11), transparent 32rem),
+		linear-gradient(180deg, #030709 0%, #071014 58%, #030709 100%) !important;
 }
 
 #auth-page > .absolute {
-  background: transparent !important;
+	background: transparent !important;
 }
 
 #auth-page::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.72;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.016) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.016) 1px, transparent 1px);
-  background-size: 64px 64px;
-  mask-image: linear-gradient(to bottom, #000 0%, transparent 82%);
+	content: '';
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	opacity: 0.72;
+	background-image:
+		linear-gradient(rgba(255, 255, 255, 0.016) 1px, transparent 1px),
+		linear-gradient(90deg, rgba(255, 255, 255, 0.016) 1px, transparent 1px);
+	background-size: 64px 64px;
+	mask-image: linear-gradient(to bottom, #000 0%, transparent 82%);
 }
 
 #auth-container {
-  color: var(--camcore-ink) !important;
+	color: var(--camcore-ink) !important;
 }
 
 #auth-login-card {
-  position: relative;
-  max-width: 460px !important;
-  padding: 34px 34px 30px !important;
-  border: 1px solid var(--camcore-line) !important;
-  border-radius: var(--camcore-radius-xl) !important;
-  background: rgba(7, 16, 20, 0.86) !important;
-  box-shadow: var(--camcore-shadow-lg) !important;
-  backdrop-filter: blur(28px) saturate(135%);
+	position: relative;
+	max-width: 460px !important;
+	padding: 34px 34px 30px !important;
+	border: 1px solid var(--camcore-line) !important;
+	border-radius: var(--camcore-radius-xl) !important;
+	background: rgba(7, 16, 20, 0.86) !important;
+	box-shadow: var(--camcore-shadow-lg) !important;
+	backdrop-filter: blur(28px) saturate(135%);
 }
 
 #auth-login-card::before {
-  content: "";
-  display: block;
-  width: min(260px, 78%);
-  height: 74px;
-  margin: 0 auto 16px;
-  background: url('/static/camcore-logo.png') center / contain no-repeat;
+	content: '';
+	display: block;
+	width: min(260px, 78%);
+	height: 74px;
+	margin: 0 auto 16px;
+	background: url('/static/camcore-logo.png') center / contain no-repeat;
 }
 
 #auth-login-card::after {
-  content: "PRIVATE AI WORKSPACE";
-  display: block;
-  margin-top: 22px;
-  color: var(--camcore-quiet);
-  font-size: 0.62rem;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  text-align: center;
+	content: 'PRIVATE AI WORKSPACE';
+	display: block;
+	margin-top: 22px;
+	color: var(--camcore-quiet);
+	font-size: 0.62rem;
+	font-weight: 800;
+	letter-spacing: 0.16em;
+	text-align: center;
 }
 
 #auth-login-card #logo {
-  display: none !important;
+	display: none !important;
 }
 
 #auth-login-card button {
-  min-height: 44px;
-  border: 1px solid var(--camcore-line) !important;
-  border-radius: 14px !important;
-  background: var(--camcore-surface-soft) !important;
+	min-height: 44px;
+	border: 1px solid var(--camcore-line) !important;
+	border-radius: 14px !important;
+	background: var(--camcore-surface-soft) !important;
 }
 
 #auth-login-card button:hover {
-  color: var(--camcore-ink) !important;
-  border-color: rgba(22, 215, 232, 0.38) !important;
-  background: linear-gradient(135deg, rgba(22, 215, 232, 0.11), rgba(74, 168, 255, 0.07)) !important;
+	color: var(--camcore-ink) !important;
+	border-color: rgba(22, 215, 232, 0.38) !important;
+	background: linear-gradient(
+		135deg,
+		rgba(22, 215, 232, 0.11),
+		rgba(74, 168, 255, 0.07)
+	) !important;
 }
 
 /* Splash / startup: real CamCore production wordmark with Jarvis service identity. */
 #splash-screen {
-  background:
-    radial-gradient(circle at 14% 12%, rgba(22, 215, 232, 0.17), transparent 28rem),
-    radial-gradient(circle at 88% 10%, rgba(74, 168, 255, 0.10), transparent 30rem),
-    linear-gradient(180deg, #030709 0%, #071014 55%, #030709 100%) !important;
+	background:
+		radial-gradient(circle at 14% 12%, rgba(22, 215, 232, 0.17), transparent 28rem),
+		radial-gradient(circle at 88% 10%, rgba(74, 168, 255, 0.1), transparent 30rem),
+		linear-gradient(180deg, #030709 0%, #071014 55%, #030709 100%) !important;
 }
 
 #splash-screen::before {
-  content: "";
-  position: absolute;
-  top: 43%;
-  left: 50%;
-  width: min(390px, 72vw);
-  height: 126px;
-  transform: translate(-50%, -50%);
-  background: url('/static/camcore-logo.png') center / contain no-repeat;
-  filter: drop-shadow(0 24px 64px rgba(0, 0, 0, 0.44));
-  animation: camcore-breathe 2.2s ease-in-out infinite;
+	content: '';
+	position: absolute;
+	top: 43%;
+	left: 50%;
+	width: min(390px, 72vw);
+	height: 126px;
+	transform: translate(-50%, -50%);
+	background: url('/static/camcore-logo.png') center / contain no-repeat;
+	filter: drop-shadow(0 24px 64px rgba(0, 0, 0, 0.44));
+	animation: camcore-breathe 2.2s ease-in-out infinite;
 }
 
 #splash-screen::after {
-  content: "Jarvis  |  CamCore AI   ·   Private AI workspace";
-  position: absolute;
-  top: calc(43% + 88px);
-  left: 50%;
-  transform: translateX(-50%);
-  color: var(--camcore-muted);
-  font-size: 0.68rem;
-  font-weight: 780;
-  line-height: 1.2;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  white-space: nowrap;
+	content: 'Jarvis  |  CamCore AI   ·   Private AI workspace';
+	position: absolute;
+	top: calc(43% + 88px);
+	left: 50%;
+	transform: translateX(-50%);
+	color: var(--camcore-muted);
+	font-size: 0.68rem;
+	font-weight: 780;
+	line-height: 1.2;
+	letter-spacing: 0.15em;
+	text-transform: uppercase;
+	white-space: nowrap;
 }
 
 #splash-screen #logo,
 #splash-screen #logo-her,
 #splash-screen #progress-background,
 #splash-screen #progress-bar {
-  visibility: hidden !important;
-  opacity: 0 !important;
+	visibility: hidden !important;
+	opacity: 0 !important;
 }
 
 @keyframes camcore-breathe {
-  0%, 100% {
-    opacity: 0.9;
-    transform: translate(-50%, -50%) scale(0.99);
-  }
-  50% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1.015);
-  }
+	0%,
+	100% {
+		opacity: 0.9;
+		transform: translate(-50%, -50%) scale(0.99);
+	}
+	50% {
+		opacity: 1;
+		transform: translate(-50%, -50%) scale(1.015);
+	}
 }
 
 /* Scrollbars use the same muted-cyan material as CamCore.au. */
 ::-webkit-scrollbar-thumb,
 .dark ::-webkit-scrollbar-thumb {
-  background-color: rgba(112, 136, 153, 0.48) !important;
-  border-color: rgba(3, 7, 9, 0.82) !important;
+	background-color: rgba(112, 136, 153, 0.48) !important;
+	border-color: rgba(3, 7, 9, 0.82) !important;
 }
 
 ::-webkit-scrollbar-thumb:hover,
 .dark ::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(22, 215, 232, 0.38) !important;
+	background-color: rgba(22, 215, 232, 0.38) !important;
 }
 
 @media (max-width: 640px) {
-  #auth-login-card {
-    padding: 28px 22px 24px !important;
-    border-radius: 24px !important;
-  }
+	#auth-login-card {
+		padding: 28px 22px 24px !important;
+		border-radius: 24px !important;
+	}
 
-  #auth-login-card::before {
-    width: min(230px, 82%);
-    height: 64px;
-  }
+	#auth-login-card::before {
+		width: min(230px, 82%);
+		height: 64px;
+	}
 
-  #splash-screen::before {
-    width: min(310px, 78vw);
-    height: 108px;
-  }
+	#splash-screen::before {
+		width: min(310px, 78vw);
+		height: 108px;
+	}
 
-  #splash-screen::after {
-    top: calc(43% + 76px);
-    width: 86vw;
-    font-size: 0.58rem;
-    letter-spacing: 0.11em;
-    text-align: center;
-    white-space: normal;
-  }
+	#splash-screen::after {
+		top: calc(43% + 76px);
+		width: 86vw;
+		font-size: 0.58rem;
+		letter-spacing: 0.11em;
+		text-align: center;
+		white-space: normal;
+	}
 
-  body:not(:has(#auth-page)) form:has(#chat-input)::before {
-    inset: -5px -3px;
-    border-radius: 22px;
-  }
+	body:not(:has(#auth-page)) form:has(#chat-input)::before {
+		inset: -5px -3px;
+		border-radius: 22px;
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    scroll-behavior: auto !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+	*,
+	*::before,
+	*::after {
+		scroll-behavior: auto !important;
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
 
-  #splash-screen::before {
-    animation: none !important;
-  }
+	#splash-screen::before {
+		animation: none !important;
+	}
 }

@@ -5,11 +5,13 @@ on:
     branches: [main]
     paths:
       - "deploy/camcore/branding/**"
+      - "deploy/camcore/BRANDING.md"
       - ".github/workflows/camcore-branding-image.yml"
   push:
     branches: [main]
     paths:
       - "deploy/camcore/branding/**"
+      - "deploy/camcore/BRANDING.md"
       - ".github/workflows/camcore-branding-image.yml"
   workflow_dispatch:
 
@@ -26,6 +28,10 @@ jobs:
   build:
     name: Build branding overlay
     runs-on: ubuntu-latest
+    env:
+      UPSTREAM_IMAGE: ghcr.io/open-webui/open-webui:v0.11.1@sha256:6bb1fbe8ab0a3e0456067f493044ffb66a30a65a34be47f6a5862176a370dd16
+      UPSTREAM_SOURCE_REVISION: d3e8bf3405e848cfba377814d0aa7ba7290e414d
+      UPSTREAM_VERSION: 0.11.1
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
@@ -40,12 +46,14 @@ jobs:
           loader=deploy/camcore/branding/loader.js
           manifest=deploy/camcore/branding/camcore-manifest.json
           patcher=deploy/camcore/branding/patch_runtime.py
+          patcher_test=deploy/camcore/branding/test_patch_runtime.py
           tool_patcher=deploy/camcore/branding/patch_tool_servers.py
           responses_patcher=deploy/camcore/branding/patch_openai_responses.py
           responses_test=deploy/camcore/branding/test_patch_openai_responses.py
           verifier=deploy/camcore/branding/verify_assets.py
 
-          grep -Fq 'FROM ghcr.io/open-webui/open-webui:v0.11.0@sha256:72c0ba641ba75e7aa52655cb242570906ececd09b1140fb736483038a22b3228' "$dockerfile"
+          grep -Fq "FROM ${UPSTREAM_IMAGE}" "$dockerfile"
+          grep -Fq "$UPSTREAM_SOURCE_REVISION" "$dockerfile"
           grep -Fq 'c652985eb0ada755c6a3940da5426d57c59b293a' "$dockerfile"
           grep -Fq 'https://camcore.au/assets/camcore-logo.png' "$dockerfile"
           grep -Fq 'camcore-patch-tool-servers.py' "$dockerfile"
@@ -55,7 +63,7 @@ jobs:
           grep -Fq '5ec9b1ea22bd45c50ff159a5b4046eba424f67b6' "$verifier"
           grep -Fq '540a5b2a15dd3d9f830dd58555f6b653c12c5f29' "$verifier"
 
-          for path in "$css" "$loader" "$manifest" "$patcher" "$tool_patcher" "$responses_patcher" "$responses_test" "$verifier" deploy/camcore/branding/camcore-mark.svg; do
+          for path in "$css" "$loader" "$manifest" "$patcher" "$patcher_test" "$tool_patcher" "$responses_patcher" "$responses_test" "$verifier" deploy/camcore/branding/camcore-mark.svg; do
             test -s "$path"
           done
 
@@ -80,26 +88,69 @@ jobs:
           grep -Fq "Tools.get_tools_by_ids(tool_ids) if ENABLE_PLUGINS else {}" "$tool_patcher"
           grep -Fq "elif tool_id.startswith('server:') or ENABLE_PLUGINS:" "$tool_patcher"
           grep -Fq "responses_payload.pop('reasoning_effort', None)" "$responses_patcher"
+          grep -Fq "responses_payload['store'] = False" "$responses_patcher"
+          grep -Fq "responses_payload.pop('previous_response_id', None)" "$responses_patcher"
+          grep -Fq "include.append('reasoning.encrypted_content')" "$responses_patcher"
+          grep -Fq '_attach_camcore_responses_replay' "$responses_patcher"
+          grep -Fq 'and not responses_stream_seen' "$responses_patcher"
+          grep -Fq '**_camcore_function_call_linkage(' "$responses_patcher"
+          grep -Fq 'enabled=responses_stream_seen' "$responses_patcher"
+          grep -Fq 'tool_calls.append(responses_api_tool_calls)' "$responses_patcher"
 
           # Runtime CSS/JS must not depend on the public CamCore website.
           ! grep -Eq 'https?://' "$css"
           ! grep -Eq 'https?://' "$loader"
 
+      - name: Extract pinned upstream compatibility fixtures
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          fixture_dir="$RUNNER_TEMP/camcore-upstream"
+          test ! -e "$fixture_dir"
+          mkdir -p "$fixture_dir/utils" "$fixture_dir/routers"
+
+          docker pull "$UPSTREAM_IMAGE"
+          test "$(docker image inspect --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' "$UPSTREAM_IMAGE")" = "$UPSTREAM_SOURCE_REVISION"
+          test "$(docker image inspect --format '{{ index .Config.Labels "org.opencontainers.image.version" }}' "$UPSTREAM_IMAGE")" = "$UPSTREAM_VERSION"
+          container_id="$(docker create "$UPSTREAM_IMAGE")"
+          cleanup() {
+            docker rm -f "$container_id" >/dev/null
+          }
+          trap cleanup EXIT
+
+          docker cp "$container_id:/app/backend/open_webui/env.py" "$fixture_dir/env.py"
+          docker cp "$container_id:/app/backend/open_webui/utils/tools.py" "$fixture_dir/utils/tools.py"
+          docker cp "$container_id:/app/backend/open_webui/utils/middleware.py" "$fixture_dir/utils/middleware.py"
+          docker cp "$container_id:/app/backend/open_webui/routers/openai.py" "$fixture_dir/routers/openai.py"
+
+          test -s "$fixture_dir/env.py"
+          test -s "$fixture_dir/utils/tools.py"
+          test -s "$fixture_dir/utils/middleware.py"
+          test -s "$fixture_dir/routers/openai.py"
+
+          cleanup
+          trap - EXIT
+
       - name: Verify guarded runtime identity patch
         shell: bash
         run: |
           set -euo pipefail
-          cp backend/open_webui/env.py /tmp/camcore-env.py
+          cp "$RUNNER_TEMP/camcore-upstream/env.py" /tmp/camcore-env.py
           python deploy/camcore/branding/patch_runtime.py /tmp/camcore-env.py
           ! grep -Fq "WEBUI_NAME += ' (Open WebUI)'" /tmp/camcore-env.py
           grep -Fq "WEBUI_FAVICON_URL = '/static/favicon.png'" /tmp/camcore-env.py
+          grep -Fq '# LICENSE covers this Open WebUI branding surface, including name, logo,' /tmp/camcore-env.py
+          grep -Fq '# LICENSE covers this Open WebUI branding surface, including this favicon' /tmp/camcore-env.py
+          CAMCORE_ENV_SOURCE="$RUNNER_TEMP/camcore-upstream/env.py" \
+            python deploy/camcore/branding/test_patch_runtime.py
 
       - name: Verify guarded external OpenAPI patch
         shell: bash
         run: |
           set -euo pipefail
-          cp backend/open_webui/utils/tools.py /tmp/camcore-tools.py
-          cp backend/open_webui/utils/middleware.py /tmp/camcore-middleware.py
+          cp "$RUNNER_TEMP/camcore-upstream/utils/tools.py" /tmp/camcore-tools.py
+          cp "$RUNNER_TEMP/camcore-upstream/utils/middleware.py" /tmp/camcore-middleware.py
           python deploy/camcore/branding/patch_tool_servers.py \
             /tmp/camcore-tools.py \
             /tmp/camcore-middleware.py
@@ -111,11 +162,26 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cp backend/open_webui/routers/openai.py /tmp/camcore-openai.py
-          python deploy/camcore/branding/patch_openai_responses.py /tmp/camcore-openai.py
-          python -m py_compile /tmp/camcore-openai.py
+          cp "$RUNNER_TEMP/camcore-upstream/routers/openai.py" /tmp/camcore-openai.py
+          test -s /tmp/camcore-middleware.py
+          python deploy/camcore/branding/patch_openai_responses.py \
+            /tmp/camcore-openai.py \
+            /tmp/camcore-middleware.py
+          python -m py_compile /tmp/camcore-openai.py /tmp/camcore-middleware.py
           grep -Fq "responses_payload.pop('reasoning_effort', None)" /tmp/camcore-openai.py
           grep -Fq "responses_payload['reasoning'] = {'effort': reasoning_effort}" /tmp/camcore-openai.py
+          grep -Fq "responses_payload['store'] = False" /tmp/camcore-openai.py
+          grep -Fq "responses_payload.pop('previous_response_id', None)" /tmp/camcore-openai.py
+          grep -Fq "include.append('reasoning.encrypted_content')" /tmp/camcore-openai.py
+          grep -Fq '_attach_camcore_responses_replay(tool_messages, full_output())' \
+            /tmp/camcore-middleware.py
+          grep -Fq 'and not responses_stream_seen' /tmp/camcore-middleware.py
+          grep -Fq '**_camcore_function_call_linkage(' /tmp/camcore-middleware.py
+          grep -Fq 'enabled=responses_stream_seen' /tmp/camcore-middleware.py
+          grep -Fq 'tool_calls.append(responses_api_tool_calls)' \
+            /tmp/camcore-middleware.py
+          export CAMCORE_OPENAI_SOURCE=/tmp/camcore-openai.py
+          export CAMCORE_MIDDLEWARE_SOURCE=/tmp/camcore-middleware.py
           python deploy/camcore/branding/test_patch_openai_responses.py
 
       - name: Set up Docker Buildx

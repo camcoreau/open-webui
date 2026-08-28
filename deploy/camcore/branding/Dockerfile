@@ -2,7 +2,8 @@
 
 # CamCore presentation and product-identity layer. Keep the application runtime
 # pinned to the exact upstream Open WebUI image approved by production.
-FROM ghcr.io/open-webui/open-webui:v0.11.0@sha256:72c0ba641ba75e7aa52655cb242570906ececd09b1140fb736483038a22b3228
+# Upstream tag v0.11.1 source revision: d3e8bf3405e848cfba377814d0aa7ba7290e414d.
+FROM ghcr.io/open-webui/open-webui:v0.11.1@sha256:6bb1fbe8ab0a3e0456067f493044ffb66a30a65a34be47f6a5862176a370dd16
 
 USER 0
 
@@ -50,16 +51,35 @@ RUN python /tmp/camcore-patch-tool-servers.py \
     && grep -Fq "elif tool_id.startswith('server:') or ENABLE_PLUGINS:" \
       /app/backend/open_webui/utils/middleware.py
 
-# OpenAI requires reasoning effort to be nested in Responses API requests.
-# Keep Open WebUI's standard model setting usable when function tools are on.
+# Keep Responses requests stateless/private and replay the completed encrypted
+# reasoning item before a function result. Chat Completions remains unchanged.
 RUN python /tmp/camcore-patch-openai-responses.py \
       /app/backend/open_webui/routers/openai.py \
+      /app/backend/open_webui/utils/middleware.py \
     && rm -f /tmp/camcore-patch-openai-responses.py \
-    && python -m py_compile /app/backend/open_webui/routers/openai.py \
+    && python -m py_compile \
+      /app/backend/open_webui/routers/openai.py \
+      /app/backend/open_webui/utils/middleware.py \
     && grep -Fq "responses_payload.pop('reasoning_effort', None)" \
       /app/backend/open_webui/routers/openai.py \
     && grep -Fq "responses_payload['reasoning'] = {'effort': reasoning_effort}" \
-      /app/backend/open_webui/routers/openai.py
+      /app/backend/open_webui/routers/openai.py \
+    && grep -Fq "responses_payload['store'] = False" \
+      /app/backend/open_webui/routers/openai.py \
+    && grep -Fq "responses_payload.pop('previous_response_id', None)" \
+      /app/backend/open_webui/routers/openai.py \
+    && grep -Fq "include.append('reasoning.encrypted_content')" \
+      /app/backend/open_webui/routers/openai.py \
+    && grep -Fq "_attach_camcore_responses_replay(tool_messages, full_output())" \
+      /app/backend/open_webui/utils/middleware.py \
+    && grep -Fq "and not responses_stream_seen" \
+      /app/backend/open_webui/utils/middleware.py \
+    && grep -Fq "**_camcore_function_call_linkage(" \
+      /app/backend/open_webui/utils/middleware.py \
+    && grep -Fq "enabled=responses_stream_seen" \
+      /app/backend/open_webui/utils/middleware.py \
+    && grep -Fq "tool_calls.append(responses_api_tool_calls)" \
+      /app/backend/open_webui/utils/middleware.py
 
 RUN test -s /app/build/static/custom.css \
     && test -s /app/build/static/loader.js \

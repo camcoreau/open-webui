@@ -18,9 +18,15 @@ The intended user-facing identity is:
 Jarvis | CamCore AI
 ```
 
-Open WebUI v0.11.0 automatically appends `(Open WebUI)` to every non-default `WEBUI_NAME`. The CamCore branded image applies a deliberately narrow, exact-match build-time patch to `backend/open_webui/env.py` so the deployed name remains `Jarvis | CamCore AI` and the application favicon points to the local CamCore asset.
+Open WebUI v0.11.1 automatically appends `(Open WebUI)` to every non-default `WEBUI_NAME`. The CamCore branded image applies a deliberately narrow, exact-match build-time patch to `backend/open_webui/env.py` so the deployed name remains `Jarvis | CamCore AI` and the application favicon points to the local CamCore asset.
 
-`patch_runtime.py` is fail-closed. If the upstream identity block changes, the image build fails and the patch must be reviewed against the new upstream release before deployment.
+`patch_runtime.py` is fail-closed and preserves the upstream licence notices surrounding both identity settings. If the upstream identity block changes, the image build fails and the patch must be reviewed against the new upstream release before deployment.
+
+The branding base is pinned to released Open WebUI tag `v0.11.1`, source revision `d3e8bf3405e848cfba377814d0aa7ba7290e414d`, and GHCR index digest:
+
+```text
+sha256:6bb1fbe8ab0a3e0456067f493044ffb66a30a65a34be47f6a5862176a370dd16
+```
 
 ## CamCore design source
 
@@ -55,12 +61,12 @@ c652985eb0ada755c6a3940da5426d57c59b293a
 
 The Docker build downloads the public production copies from `camcore.au` **only during image construction** and verifies their Git blob hashes against that source revision before the build can continue:
 
-| Asset | Git blob SHA |
-| --- | --- |
-| `camcore-logo.png` | `8e5f36f6b13021145449ff59cd95593650963921` |
-| `favicon.png` | `77b25f513e3bd501d6e2578b4c8bee73da0928e8` |
+| Asset                  | Git blob SHA                               |
+| ---------------------- | ------------------------------------------ |
+| `camcore-logo.png`     | `8e5f36f6b13021145449ff59cd95593650963921` |
+| `favicon.png`          | `77b25f513e3bd501d6e2578b4c8bee73da0928e8` |
 | `apple-touch-icon.png` | `5ec9b1ea22bd45c50ff159a5b4046eba424f67b6` |
-| `icon-512.png` | `540a5b2a15dd3d9f830dd58555f6b653c12c5f29` |
+| `icon-512.png`         | `540a5b2a15dd3d9f830dd58555f6b653c12c5f29` |
 
 A changed, unavailable or unexpected asset causes the image build to fail. The running Open WebUI container has no dependency on `camcore.au` for branding assets.
 
@@ -71,9 +77,10 @@ The visual package lives under `deploy/camcore/branding/`:
 - `custom.css` implements the managed CamCore dark visual system across the application shell, sidebar, chat composer, markdown/code surfaces, dialogs, menus, toasts, sign-in fallback and splash screen.
 - `loader.js` applies the CamCore browser identity, managed dark theme, title normalisation, favicon/touch icon metadata and PWA manifest.
 - `camcore-manifest.json` gives installed/home-screen instances the `Jarvis | CamCore AI` name and CamCore application colours.
-- `patch_runtime.py` removes only Open WebUI v0.11.0's automatic custom-name suffix and points the runtime favicon setting to the bundled local CamCore favicon.
+- `patch_runtime.py` removes only Open WebUI v0.11.1's automatic custom-name suffix, preserves the surrounding upstream licence notices and points the runtime favicon setting to the bundled local CamCore favicon.
+- `test_patch_runtime.py` verifies that the guarded patch changes only the reviewed identity block and retains both upstream licence notices.
 - `camcore-mark.svg` remains as a lightweight local fallback/reference mark; the primary visible identity uses the verified production CamCore assets.
-- `Dockerfile` layers all branding over the exact approved Open WebUI v0.11.0 image digest.
+- `Dockerfile` layers all branding over the exact approved Open WebUI v0.11.1 image digest.
 
 ## Experience contract
 
@@ -113,5 +120,7 @@ When Open WebUI is upgraded:
 6. build and validate the branding layer against the new version;
 7. inspect sign-in, sidebar, chat composer, markdown/code rendering, dialogs, PWA metadata and mobile layout;
 8. pin the new branded image digest in production only after those checks pass.
+
+The branding workflow extracts its identity, OpenAPI-tool and Responses compatibility fixtures from the exact Dockerfile-pinned upstream image. The repository checkout is not used as a substitute for the runtime being patched; the final image build remains the fail-closed compatibility gate.
 
 Do not make production depend on temporary Git checkouts, mutable image tags or public runtime branding assets.
