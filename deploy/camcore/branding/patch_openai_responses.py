@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Translate Open WebUI reasoning effort for the OpenAI Responses API.
 
-Open WebUI v0.11.0 stores the standard model setting as the Chat Completions
+Open WebUI v0.11.1 stores the standard model setting as the Chat Completions
 field ``reasoning_effort``. When a managed connection uses the Responses API,
 OpenAI instead expects ``reasoning: {"effort": ...}``. Without this narrow
 translation, GPT-5.6 requests that combine reasoning and function tools fail.
 
-The patch fails closed if the approved v0.11.0 source block drifts. An explicit
+The patch fails closed if the approved v0.11.1 source block drifts. An explicit
 nested ``reasoning.effort`` value wins over the compatibility field.
 """
 

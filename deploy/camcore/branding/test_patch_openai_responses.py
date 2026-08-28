@@ -4,13 +4,14 @@
 from __future__ import annotations
 
 import ast
+import os
 import tempfile
 import unittest
 from pathlib import Path
 
 from patch_openai_responses import patch
 
-SOURCE = Path('backend/open_webui/routers/openai.py')
+SOURCE = Path(os.environ.get('CAMCORE_OPENAI_SOURCE', 'backend/open_webui/routers/openai.py'))
 
 
 def load_converter(source: str):

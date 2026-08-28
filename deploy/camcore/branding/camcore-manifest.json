@@ -1,29 +1,29 @@
 {
-  "name": "Jarvis | CamCore AI",
-  "short_name": "Jarvis",
-  "description": "Private AI workspace for CamCore.",
-  "lang": "en-AU",
-  "start_url": "/",
-  "scope": "/",
-  "display": "standalone",
-  "background_color": "#030709",
-  "theme_color": "#071014",
-  "icons": [
-    {
-      "src": "/static/favicon.png",
-      "sizes": "64x64",
-      "type": "image/png"
-    },
-    {
-      "src": "/static/apple-touch-icon.png",
-      "sizes": "180x180",
-      "type": "image/png"
-    },
-    {
-      "src": "/static/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    }
-  ]
+	"name": "Jarvis | CamCore AI",
+	"short_name": "Jarvis",
+	"description": "Private AI workspace for CamCore.",
+	"lang": "en-AU",
+	"start_url": "/",
+	"scope": "/",
+	"display": "standalone",
+	"background_color": "#030709",
+	"theme_color": "#071014",
+	"icons": [
+		{
+			"src": "/static/favicon.png",
+			"sizes": "64x64",
+			"type": "image/png"
+		},
+		{
+			"src": "/static/apple-touch-icon.png",
+			"sizes": "180x180",
+			"type": "image/png"
+		},
+		{
+			"src": "/static/icon-512.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "any"
+		}
+	]
 }

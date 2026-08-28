@@ -2,7 +2,8 @@
 
 # CamCore presentation and product-identity layer. Keep the application runtime
 # pinned to the exact upstream Open WebUI image approved by production.
-FROM ghcr.io/open-webui/open-webui:v0.11.0@sha256:72c0ba641ba75e7aa52655cb242570906ececd09b1140fb736483038a22b3228
+# Upstream tag v0.11.1 source revision: d3e8bf3405e848cfba377814d0aa7ba7290e414d.
+FROM ghcr.io/open-webui/open-webui:v0.11.1@sha256:6bb1fbe8ab0a3e0456067f493044ffb66a30a65a34be47f6a5862176a370dd16
 
 USER 0
 

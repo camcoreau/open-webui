@@ -2,7 +2,7 @@
 """Allow trusted global OpenAPI tool servers while local plugins stay disabled.
 
 CamCore deliberately runs Open WebUI with ENABLE_PLUGINS=false so arbitrary
-in-process Python tools, filters and pipes are not available. Open WebUI v0.11.0
+in-process Python tools, filters and pipes are not available. Open WebUI v0.11.1
 also gates global OpenAPI tool-server resolution behind that same flag, which
 means an otherwise authorised `server:<id>` tool is silently dropped.
 
@@ -14,7 +14,7 @@ This guarded runtime patch narrows that coupling:
 * access control, bearer authentication, TLS verification and tool schema
   handling continue to use Open WebUI's existing implementation.
 
-The patch fails closed if the approved v0.11.0 source blocks drift.
+The patch fails closed if the approved v0.11.1 source blocks drift.
 """
 
 from __future__ import annotations
