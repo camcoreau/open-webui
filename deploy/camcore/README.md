@@ -9,7 +9,7 @@ The production image is immutable and contains the reviewed CamCore visual overl
 on top of the exact approved Open WebUI v0.11.0 runtime:
 
 ```text
-ghcr.io/camcoreau/open-webui:camcore-0468f881f069c2cb67c0a279d8fdcd6830799bc5@sha256:bcaa07b4ba3306a13ed0a75c00839f17a2168c8e6bdfbe8ca489eb3ba0122f6c
+ghcr.io/camcoreau/open-webui:camcore-b39c34aa046ae30dad06a90f85d2b28fd49eaa4e@sha256:d3b91ee293827ec7d5cbc4967e3623361f220923979d74b5fcfba03b633f40e4
 ```
 
 The service publishes no host port. Nginx Proxy Manager reaches Open WebUI over
@@ -164,6 +164,7 @@ Production enables one server-side OpenAI connection:
 ```text
 URL: https://api.openai.com/v1
 Connection type: external
+API mode: Responses (`/v1/responses`)
 Authentication: bearer
 Model filter: provider discovery
 Base model cache: disabled
@@ -211,16 +212,19 @@ The change is accepted only after all of the following pass:
 2. `camcore-open-webui` reports healthy and `/health` plus `/ready` succeed.
 3. Neither service publishes a host port.
 4. Entra-only sign-in and the CamCore application roles behave as expected.
-5. OpenAI models are visible and a basic chat completes without re-entering the key.
+5. OpenAI models are visible, a basic chat completes through the Responses API
+   without re-entering the key, and the response streams normally.
 6. No Ollama models/provider entry are exposed by Open WebUI.
 7. `https://ai-tools.camcore.network/health` is reachable from the Open WebUI
    container and certificate validation succeeds.
 8. `CamCore Operations` appears as the GitOps-controlled tool server and its schema
    loads from `https://ai-tools.camcore.network/openapi.json`.
-9. Asking Jarvis to **Check CamCore health** can invoke `get_camcore_health`; missing
-   or failed integrations are reported as unavailable rather than healthy.
-10. Restart/recreate Open WebUI and confirm the OpenAI connection, CamCore Operations
-    connection, banner and starter prompts all return automatically.
+9. With GPT-5.6 Luna selected and reasoning effort set above `none`, asking Jarvis
+   to **Check CamCore health** can invoke `get_camcore_health`; missing or failed
+   integrations are reported as unavailable rather than healthy.
+10. Restart/recreate Open WebUI and confirm the Responses-mode OpenAI connection,
+    CamCore Operations connection, banner and starter prompts all return
+    automatically; repeat the basic chat and GPT-5.6 Luna tool-call checks.
 11. Local login/signup, uploads, public sharing, user API keys, arbitrary tool
     connections, modifying tools, code execution and web search remain unavailable.
 12. Neither `ai.camcore.network` nor `ai-tools.camcore.network` is reachable through
