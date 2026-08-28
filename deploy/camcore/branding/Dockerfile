@@ -13,6 +13,7 @@ COPY deploy/camcore/branding/camcore-mark.svg /app/build/static/camcore-mark.svg
 COPY deploy/camcore/branding/camcore-manifest.json /app/build/static/camcore-manifest.json
 COPY deploy/camcore/branding/patch_runtime.py /tmp/camcore-patch-runtime.py
 COPY deploy/camcore/branding/patch_tool_servers.py /tmp/camcore-patch-tool-servers.py
+COPY deploy/camcore/branding/patch_openai_responses.py /tmp/camcore-patch-openai-responses.py
 COPY deploy/camcore/branding/verify_assets.py /tmp/camcore-verify-assets.py
 
 # Use the real production CamCore assets. They are downloaded only while the
@@ -48,6 +49,17 @@ RUN python /tmp/camcore-patch-tool-servers.py \
       /app/backend/open_webui/utils/tools.py \
     && grep -Fq "elif tool_id.startswith('server:') or ENABLE_PLUGINS:" \
       /app/backend/open_webui/utils/middleware.py
+
+# OpenAI requires reasoning effort to be nested in Responses API requests.
+# Keep Open WebUI's standard model setting usable when function tools are on.
+RUN python /tmp/camcore-patch-openai-responses.py \
+      /app/backend/open_webui/routers/openai.py \
+    && rm -f /tmp/camcore-patch-openai-responses.py \
+    && python -m py_compile /app/backend/open_webui/routers/openai.py \
+    && grep -Fq "responses_payload.pop('reasoning_effort', None)" \
+      /app/backend/open_webui/routers/openai.py \
+    && grep -Fq "responses_payload['reasoning'] = {'effort': reasoning_effort}" \
+      /app/backend/open_webui/routers/openai.py
 
 RUN test -s /app/build/static/custom.css \
     && test -s /app/build/static/loader.js \
