@@ -67,12 +67,19 @@ class ResponsesPatchTests(unittest.TestCase):
                 'convert_to_responses_payload',
             },
         )
-        middleware = load_symbols(self.middleware_source, {'_attach_camcore_responses_replay'})
+        middleware = load_symbols(
+            self.middleware_source,
+            {'_attach_camcore_responses_replay', '_camcore_function_call_linkage'},
+        )
         self.converter = router['convert_to_responses_payload']
         self.clean_chat_payload = router['_strip_camcore_responses_replay_for_chat']
         self.attach_replay = middleware['_attach_camcore_responses_replay']
+        self.function_call_linkage = middleware['_camcore_function_call_linkage']
 
         self.assertIn('if image_urls and not responses_stream_seen:', self.middleware_source)
+        self.assertIn('and not responses_stream_seen', self.middleware_source)
+        self.assertIn('**_camcore_function_call_linkage(', self.middleware_source)
+        self.assertIn('tool_calls.append(responses_api_tool_calls)', self.middleware_source)
 
     def basic_payload(self, **extra) -> dict:
         return {
@@ -527,6 +534,125 @@ class ResponsesPatchTests(unittest.TestCase):
 
         cleaned = self.clean_chat_payload({'messages': marked})
         self.assertEqual(cleaned['messages'], original_tool_messages)
+
+    def test_responses_stream_disables_accidental_stateful_continuation(self) -> None:
+        stateful_guard = """                        if (
+                            ENABLE_RESPONSES_API_STATEFUL
+                            and last_response_id
+                            and not responses_stream_seen
+                        ):
+"""
+        self.assertIn(stateful_guard, self.middleware_source)
+        self.assertNotIn(
+            'if ENABLE_RESPONSES_API_STATEFUL and last_response_id:',
+            self.middleware_source,
+        )
+
+    def test_local_function_output_copies_program_caller_linkage(self) -> None:
+        provider_output = [
+            {
+                'id': 'fc_program',
+                'type': 'function_call',
+                'status': 'completed',
+                'call_id': 'call_program',
+                'name': 'run_program_tool',
+                'arguments': '{}',
+                'caller': {'type': 'program', 'caller_id': 'prog_42'},
+                'namespace': 'camcore.program',
+            }
+        ]
+
+        linkage = self.function_call_linkage(provider_output, 'call_program')
+        local_output = {
+            'type': 'function_call_output',
+            'id': 'fco_local',
+            'call_id': 'call_program',
+            **linkage,
+            'output': [{'type': 'input_text', 'text': 'healthy'}],
+            'status': 'completed',
+        }
+
+        self.assertEqual(
+            local_output,
+            {
+                'type': 'function_call_output',
+                'id': 'fco_local',
+                'call_id': 'call_program',
+                'caller': {'type': 'program', 'caller_id': 'prog_42'},
+                'name': 'run_program_tool',
+                'namespace': 'camcore.program',
+                'output': [{'type': 'input_text', 'text': 'healthy'}],
+                'status': 'completed',
+            },
+        )
+        self.assertEqual(self.function_call_linkage(provider_output, 'missing'), {})
+
+    def test_chat_cleanup_golden_preserves_plain_parallel_tool_and_image_messages(self) -> None:
+        golden_messages = [
+            {'role': 'user', 'content': 'Run both checks'},
+            {'role': 'assistant', 'content': 'I will run both checks.'},
+            {
+                'role': 'assistant',
+                'content': '',
+                'tool_calls': [
+                    {
+                        'id': 'call_1',
+                        'type': 'function',
+                        'function': {'name': 'first_tool', 'arguments': '{}'},
+                    },
+                    {
+                        'id': 'call_2',
+                        'type': 'function',
+                        'function': {'name': 'second_tool', 'arguments': '{}'},
+                    },
+                ],
+            },
+            {'role': 'tool', 'tool_call_id': 'call_1', 'content': 'first result'},
+            {'role': 'tool', 'tool_call_id': 'call_2', 'content': 'second result'},
+            {
+                'role': 'user',
+                'content': [
+                    {'type': 'text', 'text': 'Tool image compatibility copy'},
+                    {'type': 'image_url', 'image_url': {'url': 'data:image/png;base64,AA=='}},
+                ],
+            },
+        ]
+        marked_messages = copy.deepcopy(golden_messages)
+        marked_messages[2]['output'] = [{'type': 'reasoning', 'encrypted_content': 'opaque'}]
+        marked_messages[2]['_camcore_responses_replay'] = 'output'
+        for index in (3, 4, 5):
+            marked_messages[index]['_camcore_responses_replay'] = 'skip'
+
+        cleaned = self.clean_chat_payload({'model': 'chat-provider', 'messages': marked_messages, 'stream': True})
+
+        self.assertEqual(
+            cleaned,
+            {'model': 'chat-provider', 'messages': golden_messages, 'stream': True},
+        )
+
+    def test_native_responses_tool_call_keeps_original_id_on_malformed_arguments(self) -> None:
+        native_call = {
+            'id': 'call_provider',
+            'index': 0,
+            'function': {
+                'name': 'health_check',
+                'arguments': '{"service":"one"}{"service":"two"}',
+            },
+        }
+        tool_calls = []
+        responses_api_tool_calls = [native_call]
+        tool_calls.append(responses_api_tool_calls)
+
+        self.assertEqual(tool_calls, [[native_call]])
+        self.assertEqual(tool_calls[0][0]['id'], 'call_provider')
+        self.assertNotIn(
+            'tool_calls.append(_split_tool_calls(responses_api_tool_calls))',
+            self.middleware_source,
+        )
+        self.assertIn(
+            'tool_calls.append(_split_tool_calls(response_tool_calls))',
+            self.middleware_source,
+        )
 
     def test_patcher_is_idempotent(self) -> None:
         router_before = self.router_target.read_text(encoding='utf-8')

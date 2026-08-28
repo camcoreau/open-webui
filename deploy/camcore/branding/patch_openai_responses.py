@@ -265,6 +265,28 @@ MIDDLEWARE_HELPER_REPLACEMENT = """def output_id(prefix: str) -> str:
     return f'{prefix}_{uuid4().hex[:24]}'
 
 
+def _camcore_function_call_linkage(output: list[dict], call_id: str) -> dict:
+    \"\"\"Copy provider linkage from the matching native function call.\"\"\"
+    function_call = next(
+        (
+            item
+            for item in reversed(output)
+            if isinstance(item, dict)
+            and item.get('type') == 'function_call'
+            and item.get('call_id') == call_id
+        ),
+        None,
+    )
+    if function_call is None:
+        return {}
+
+    return {
+        field: function_call[field]
+        for field in ('caller', 'name', 'namespace')
+        if field in function_call
+    }
+
+
 def _attach_camcore_responses_replay(tool_messages: list[dict], output: list[dict]) -> list[dict]:
     \"\"\"Carry native output through the provider-agnostic internal tool loop.\"\"\"
     if not tool_messages or not output:
@@ -383,6 +405,36 @@ MIDDLEWARE_IMAGE_REPLACEMENT = """                            if image_urls and 
                                 new_form_data['messages'].append(
 """
 
+MIDDLEWARE_STATEFUL_EXPECTED = """                        if ENABLE_RESPONSES_API_STATEFUL and last_response_id:
+"""
+
+MIDDLEWARE_STATEFUL_REPLACEMENT = """                        if (
+                            ENABLE_RESPONSES_API_STATEFUL
+                            and last_response_id
+                            and not responses_stream_seen
+                        ):
+"""
+
+MIDDLEWARE_FUNCTION_OUTPUT_EXPECTED = """                                'call_id': result.get('tool_call_id', ''),
+                                'output': output_parts,
+"""
+
+MIDDLEWARE_FUNCTION_OUTPUT_REPLACEMENT = """                                'call_id': result.get('tool_call_id', ''),
+                                **_camcore_function_call_linkage(
+                                    output, result.get('tool_call_id', '')
+                                ),
+                                'output': output_parts,
+"""
+
+MIDDLEWARE_NATIVE_TOOL_CALLS_EXPECTED = """                        if responses_api_tool_calls:
+                            tool_calls.append(_split_tool_calls(responses_api_tool_calls))
+"""
+
+MIDDLEWARE_NATIVE_TOOL_CALLS_REPLACEMENT = """                        if responses_api_tool_calls:
+                            # Provider-native call IDs must remain paired with replayed output.
+                            tool_calls.append(responses_api_tool_calls)
+"""
+
 
 def replace_guarded(source: str, expected: str, replacement: str, label: str, target: Path) -> str:
     expected_matches = source.count(expected)
@@ -453,17 +505,32 @@ def patch_middleware(target: Path) -> None:
         (MIDDLEWARE_NONLOCAL_EXPECTED, MIDDLEWARE_NONLOCAL_REPLACEMENT, 'Responses stream nonlocal'),
         (MIDDLEWARE_EVENT_EXPECTED, MIDDLEWARE_EVENT_REPLACEMENT, 'Responses stream detection'),
         (MIDDLEWARE_IMAGE_EXPECTED, MIDDLEWARE_IMAGE_REPLACEMENT, 'tool image compatibility copy'),
+        (MIDDLEWARE_STATEFUL_EXPECTED, MIDDLEWARE_STATEFUL_REPLACEMENT, 'stateful continuation guard'),
+        (
+            MIDDLEWARE_FUNCTION_OUTPUT_EXPECTED,
+            MIDDLEWARE_FUNCTION_OUTPUT_REPLACEMENT,
+            'function-call-output linkage',
+        ),
+        (
+            MIDDLEWARE_NATIVE_TOOL_CALLS_EXPECTED,
+            MIDDLEWARE_NATIVE_TOOL_CALLS_REPLACEMENT,
+            'provider-native tool-call identity',
+        ),
     ):
         source = replace_guarded(source, expected, replacement, label, target)
 
     required = (
         'def _attach_camcore_responses_replay',
+        'def _camcore_function_call_linkage',
         "marked_message['output'] = replay_output",
         "marked_message['_camcore_responses_replay'] = 'skip'",
         'responses_stream_seen = False',
         'responses_stream_seen = True',
         '_attach_camcore_responses_replay(tool_messages, full_output())',
         'if image_urls and not responses_stream_seen:',
+        'and not responses_stream_seen',
+        '**_camcore_function_call_linkage(',
+        'tool_calls.append(responses_api_tool_calls)',
     )
     missing = [marker for marker in required if marker not in source]
     if missing:
