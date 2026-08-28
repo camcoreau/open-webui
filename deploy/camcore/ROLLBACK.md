@@ -1,7 +1,15 @@
-# CamCore AI branding rollback
+# CamCore AI production rollback
 
-If the full branding rollout fails validation, restore the previous known-good production image reference in `deploy/camcore/compose.yaml`:
+If an Open WebUI production rollout fails validation, restore the last verified
+production image reference in `deploy/camcore/compose.yaml`:
 
-`ghcr.io/camcoreau/open-webui:camcore-9793564487afccce757ff1bd42f947ca3f67f227@sha256:451b99a261ccc3765541483a48c2a83ca841b4025dcb37fa00bc120d0a4b6e72`
+`ghcr.io/camcoreau/open-webui:camcore-4d85a50720f227d69c85dc6256fdbdc970ce138a@sha256:cfc5c4e4d63e8779d86d1cc56807555dc42b0d65217af0c6efbd209eaf30ff7d`
 
-Redeploy the stack and confirm health before investigating the failed release.
+For the 2026-08-28 Responses migration rollback, also remove
+`"api_type":"responses"` from `OPENAI_API_CONFIGS` so the predecessor uses its
+verified Chat Completions contract.
+
+Before redeploying, preserve a transaction-consistent backup of the persistent
+Open WebUI data volume. After redeploy, confirm the immutable image digest,
+healthy state, zero unexpected restarts, unchanged volume/network attachment,
+no published host ports, Entra-only sign-in, and a successful basic chat.

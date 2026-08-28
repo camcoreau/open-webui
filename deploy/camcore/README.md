@@ -9,7 +9,7 @@ The production image is immutable and contains the reviewed CamCore visual overl
 on top of the exact approved Open WebUI v0.11.0 runtime:
 
 ```text
-ghcr.io/camcoreau/open-webui:camcore-b39c34aa046ae30dad06a90f85d2b28fd49eaa4e@sha256:d3b91ee293827ec7d5cbc4967e3623361f220923979d74b5fcfba03b633f40e4
+ghcr.io/camcoreau/open-webui:camcore-4d85a50720f227d69c85dc6256fdbdc970ce138a@sha256:cfc5c4e4d63e8779d86d1cc56807555dc42b0d65217af0c6efbd209eaf30ff7d
 ```
 
 The service publishes no host port. Nginx Proxy Manager reaches Open WebUI over
@@ -164,7 +164,7 @@ Production enables one server-side OpenAI connection:
 ```text
 URL: https://api.openai.com/v1
 Connection type: external
-API mode: Responses (`/v1/responses`)
+API mode: Chat Completions (`/v1/chat/completions`)
 Authentication: bearer
 Model filter: provider discovery
 Base model cache: disabled
@@ -173,6 +173,14 @@ Ollama: disabled
 
 The OpenAI key is never embedded in `compose.yaml`; the stack fails closed if
 `CAMCORE_AI_OPENAI_API_KEY` is absent.
+
+Responses mode is temporarily disabled after live acceptance found that Open
+WebUI v0.11.0 opened the upstream Responses stream but did not deliver any text
+or completion event to the signed-in chat UI. Do not re-enable
+`api_type=responses` until both ordinary streaming and the full reasoning-plus-tool
+continuation have passed live validation. While this rollback is active, GPT-5.6
+reasoning above `none` cannot be combined with function tools through Chat
+Completions.
 
 ## 5. CamCore Operations tool contract
 
@@ -212,19 +220,18 @@ The change is accepted only after all of the following pass:
 2. `camcore-open-webui` reports healthy and `/health` plus `/ready` succeed.
 3. Neither service publishes a host port.
 4. Entra-only sign-in and the CamCore application roles behave as expected.
-5. OpenAI models are visible, a basic chat completes through the Responses API
-   without re-entering the key, and the response streams normally.
+5. OpenAI models are visible and a basic chat completes without re-entering the key.
 6. No Ollama models/provider entry are exposed by Open WebUI.
 7. `https://ai-tools.camcore.network/health` is reachable from the Open WebUI
    container and certificate validation succeeds.
 8. `CamCore Operations` appears as the GitOps-controlled tool server and its schema
    loads from `https://ai-tools.camcore.network/openapi.json`.
-9. With GPT-5.6 Luna selected and reasoning effort set above `none`, asking Jarvis
-   to **Check CamCore health** can invoke `get_camcore_health`; missing or failed
+9. Asking Jarvis to **Check CamCore health** with a Chat Completions-compatible
+   model configuration can invoke `get_camcore_health`; missing or failed
    integrations are reported as unavailable rather than healthy.
-10. Restart/recreate Open WebUI and confirm the Responses-mode OpenAI connection,
-    CamCore Operations connection, banner and starter prompts all return
-    automatically; repeat the basic chat and GPT-5.6 Luna tool-call checks.
+10. Restart/recreate Open WebUI and confirm the OpenAI connection, CamCore
+    Operations connection, banner and starter prompts all return automatically;
+    repeat the basic chat check.
 11. Local login/signup, uploads, public sharing, user API keys, arbitrary tool
     connections, modifying tools, code execution and web search remain unavailable.
 12. Neither `ai.camcore.network` nor `ai-tools.camcore.network` is reachable through
