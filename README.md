@@ -35,7 +35,7 @@ The CamCore production profile deliberately narrows the much broader upstream Op
 
 - Microsoft Entra is the only sign-in path; local signup and password authentication are disabled.
 - OpenAI is the production inference provider through Chat Completions. Local Ollama inference is disabled.
-- CamCore Operations is supplied by the standalone [`camcoreau/camcore-ai-gateway`](https://github.com/camcoreau/camcore-ai-gateway), not by the legacy OpenJarvis runtime.
+- CamCore Operations is supplied by the standalone `camcoreau/camcore-ai-gateway` service, not by the legacy OpenJarvis runtime.
 - The approved Operations surface is read-only and bounded. Modifying infrastructure actions require a separately designed confirmation and audit boundary before they can be enabled.
 - Production configuration is controlled by Git and the Portainer stack environment. Admin-panel changes are intentionally non-persistent.
 - The service remains private, publishes no host port and runs as a single replica with persistent SQLite data.
