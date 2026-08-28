@@ -79,6 +79,7 @@ class ResponsesPatchTests(unittest.TestCase):
         self.assertIn('if image_urls and not responses_stream_seen:', self.middleware_source)
         self.assertIn('and not responses_stream_seen', self.middleware_source)
         self.assertIn('**_camcore_function_call_linkage(', self.middleware_source)
+        self.assertIn('enabled=responses_stream_seen', self.middleware_source)
         self.assertIn('tool_calls.append(responses_api_tool_calls)', self.middleware_source)
 
     def basic_payload(self, **extra) -> dict:
@@ -131,6 +132,12 @@ class ResponsesPatchTests(unittest.TestCase):
 
         self.assertNotIn('reasoning_effort', result)
         self.assertEqual(result['reasoning'], {'effort': 'high', 'summary': 'auto'})
+
+    def test_strict_stateless_payload_discards_previous_response_id(self) -> None:
+        result = self.converter(self.basic_payload(previous_response_id='resp_inherited'))
+
+        self.assertIs(result['store'], False)
+        self.assertNotIn('previous_response_id', result)
 
     def test_merges_effort_with_other_nested_reasoning_options(self) -> None:
         result = self.converter(
@@ -562,7 +569,8 @@ class ResponsesPatchTests(unittest.TestCase):
             }
         ]
 
-        linkage = self.function_call_linkage(provider_output, 'call_program')
+        self.assertEqual(self.function_call_linkage(provider_output, 'call_program', False), {})
+        linkage = self.function_call_linkage(provider_output, 'call_program', True)
         local_output = {
             'type': 'function_call_output',
             'id': 'fco_local',
@@ -585,7 +593,7 @@ class ResponsesPatchTests(unittest.TestCase):
                 'status': 'completed',
             },
         )
-        self.assertEqual(self.function_call_linkage(provider_output, 'missing'), {})
+        self.assertEqual(self.function_call_linkage(provider_output, 'missing', True), {})
 
     def test_chat_cleanup_golden_preserves_plain_parallel_tool_and_image_messages(self) -> None:
         golden_messages = [

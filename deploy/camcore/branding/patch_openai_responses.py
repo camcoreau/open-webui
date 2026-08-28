@@ -221,6 +221,7 @@ ROUTER_PAYLOAD_REPLACEMENT = """    responses_payload = {**payload, 'input': inp
 
     # CamCore manages context by replaying output and must not retain Responses.
     responses_payload['store'] = False
+    responses_payload.pop('previous_response_id', None)
 
     # Preserve caller-requested includes and add opaque reasoning exactly once.
     include = responses_payload.get('include')
@@ -265,8 +266,11 @@ MIDDLEWARE_HELPER_REPLACEMENT = """def output_id(prefix: str) -> str:
     return f'{prefix}_{uuid4().hex[:24]}'
 
 
-def _camcore_function_call_linkage(output: list[dict], call_id: str) -> dict:
+def _camcore_function_call_linkage(output: list[dict], call_id: str, enabled: bool) -> dict:
     \"\"\"Copy provider linkage from the matching native function call.\"\"\"
+    if not enabled:
+        return {}
+
     function_call = next(
         (
             item
@@ -421,7 +425,9 @@ MIDDLEWARE_FUNCTION_OUTPUT_EXPECTED = """                                'call_i
 
 MIDDLEWARE_FUNCTION_OUTPUT_REPLACEMENT = """                                'call_id': result.get('tool_call_id', ''),
                                 **_camcore_function_call_linkage(
-                                    output, result.get('tool_call_id', '')
+                                    output,
+                                    result.get('tool_call_id', ''),
+                                    enabled=responses_stream_seen,
                                 ),
                                 'output': output_parts,
 """
@@ -467,6 +473,7 @@ def patch_router(target: Path) -> None:
     required = (
         "responses_payload.pop('reasoning_effort', None)",
         "responses_payload['store'] = False",
+        "responses_payload.pop('previous_response_id', None)",
         "include.append('reasoning.encrypted_content')",
         "'encrypted_content'",
         "'phase'",
@@ -530,6 +537,7 @@ def patch_middleware(target: Path) -> None:
         'if image_urls and not responses_stream_seen:',
         'and not responses_stream_seen',
         '**_camcore_function_call_linkage(',
+        'enabled=responses_stream_seen',
         'tool_calls.append(responses_api_tool_calls)',
     )
     missing = [marker for marker in required if marker not in source]

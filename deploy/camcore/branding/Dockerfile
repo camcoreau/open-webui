@@ -66,6 +66,8 @@ RUN python /tmp/camcore-patch-openai-responses.py \
       /app/backend/open_webui/routers/openai.py \
     && grep -Fq "responses_payload['store'] = False" \
       /app/backend/open_webui/routers/openai.py \
+    && grep -Fq "responses_payload.pop('previous_response_id', None)" \
+      /app/backend/open_webui/routers/openai.py \
     && grep -Fq "include.append('reasoning.encrypted_content')" \
       /app/backend/open_webui/routers/openai.py \
     && grep -Fq "_attach_camcore_responses_replay(tool_messages, full_output())" \
@@ -73,6 +75,8 @@ RUN python /tmp/camcore-patch-openai-responses.py \
     && grep -Fq "and not responses_stream_seen" \
       /app/backend/open_webui/utils/middleware.py \
     && grep -Fq "**_camcore_function_call_linkage(" \
+      /app/backend/open_webui/utils/middleware.py \
+    && grep -Fq "enabled=responses_stream_seen" \
       /app/backend/open_webui/utils/middleware.py \
     && grep -Fq "tool_calls.append(responses_api_tool_calls)" \
       /app/backend/open_webui/utils/middleware.py

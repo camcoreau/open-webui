@@ -89,10 +89,12 @@ jobs:
           grep -Fq "elif tool_id.startswith('server:') or ENABLE_PLUGINS:" "$tool_patcher"
           grep -Fq "responses_payload.pop('reasoning_effort', None)" "$responses_patcher"
           grep -Fq "responses_payload['store'] = False" "$responses_patcher"
+          grep -Fq "responses_payload.pop('previous_response_id', None)" "$responses_patcher"
           grep -Fq "include.append('reasoning.encrypted_content')" "$responses_patcher"
           grep -Fq '_attach_camcore_responses_replay' "$responses_patcher"
           grep -Fq 'and not responses_stream_seen' "$responses_patcher"
           grep -Fq '**_camcore_function_call_linkage(' "$responses_patcher"
+          grep -Fq 'enabled=responses_stream_seen' "$responses_patcher"
           grep -Fq 'tool_calls.append(responses_api_tool_calls)' "$responses_patcher"
 
           # Runtime CSS/JS must not depend on the public CamCore website.
@@ -169,11 +171,13 @@ jobs:
           grep -Fq "responses_payload.pop('reasoning_effort', None)" /tmp/camcore-openai.py
           grep -Fq "responses_payload['reasoning'] = {'effort': reasoning_effort}" /tmp/camcore-openai.py
           grep -Fq "responses_payload['store'] = False" /tmp/camcore-openai.py
+          grep -Fq "responses_payload.pop('previous_response_id', None)" /tmp/camcore-openai.py
           grep -Fq "include.append('reasoning.encrypted_content')" /tmp/camcore-openai.py
           grep -Fq '_attach_camcore_responses_replay(tool_messages, full_output())' \
             /tmp/camcore-middleware.py
           grep -Fq 'and not responses_stream_seen' /tmp/camcore-middleware.py
           grep -Fq '**_camcore_function_call_linkage(' /tmp/camcore-middleware.py
+          grep -Fq 'enabled=responses_stream_seen' /tmp/camcore-middleware.py
           grep -Fq 'tool_calls.append(responses_api_tool_calls)' \
             /tmp/camcore-middleware.py
           export CAMCORE_OPENAI_SOURCE=/tmp/camcore-openai.py
