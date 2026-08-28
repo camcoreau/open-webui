@@ -1,265 +1,169 @@
-# Open WebUI 👋
+# Jarvis | CamCore AI
 
-![GitHub stars](https://img.shields.io/github/stars/open-webui/open-webui?style=social)
-![GitHub forks](https://img.shields.io/github/forks/open-webui/open-webui?style=social)
-![GitHub watchers](https://img.shields.io/github/watchers/open-webui/open-webui?style=social)
-![GitHub repo size](https://img.shields.io/github/repo-size/open-webui/open-webui)
-![GitHub language count](https://img.shields.io/github/languages/count/open-webui/open-webui)
-![GitHub top language](https://img.shields.io/github/languages/top/open-webui/open-webui)
-![GitHub last commit](https://img.shields.io/github/last-commit/open-webui/open-webui?color=red)
-[![Discord](https://img.shields.io/badge/Discord-Open_WebUI-blue?logo=discord&logoColor=white)](https://discord.gg/5rJgQTnV4s)
-[![](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/open-webui)
+[![Validate CamCore deployment](https://github.com/camcoreau/open-webui/actions/workflows/camcore-deployment.yml/badge.svg?branch=main)](https://github.com/camcoreau/open-webui/actions/workflows/camcore-deployment.yml)
+[![Build CamCore branding image](https://github.com/camcoreau/open-webui/actions/workflows/camcore-branding-image.yml/badge.svg?branch=main)](https://github.com/camcoreau/open-webui/actions/workflows/camcore-branding-image.yml)
 
-![Open WebUI Banner](./banner.png)
+**Private AI workspace for CamCore – Cameron Family Secure Network, maintained as a downstream of [Open WebUI](https://github.com/open-webui/open-webui).**
 
-**Open WebUI is an [extensible](https://docs.openwebui.com/features/extensibility/plugin), feature-rich, and user-friendly self-hosted AI platform designed to operate entirely offline.** It supports various LLM runners like **Ollama** and **OpenAI-compatible APIs**, with **built-in inference engine** for RAG, making it a **powerful AI deployment solution**.
+> **CamCore is a privately owned and operated family technology network that delivers secure, reliable and professionally managed digital services for the Cameron household, Cameron-Media and associated family operations.**
 
-Passionate about open-source AI? [Join our team →](https://careers.openwebui.com/)
+**Built for Home. Engineered Like Enterprise.**
 
-![Open WebUI Demo](./demo.png)
+This public repository is the source of truth for CamCore's Open WebUI downstream, including the production deployment overlay, CamCore identity layer, validation controls, release process and rollback guidance.
 
-> [!TIP]  
-> **Looking for an [Enterprise Plan](https://docs.openwebui.com/enterprise)?** – **[Speak with Our Sales Team Today!](https://docs.openwebui.com/enterprise)**
->
-> Get **enhanced capabilities**, including **custom theming and branding**, **Service Level Agreement (SLA) support**, **Long-Term Support (LTS) versions**, and **more!**
+> **Repository status:** `main` records the reviewed source and desired production contract. A merge does not by itself prove that an image was published, a host was redeployed or the live service was verified. Treat those as separate release states, and never commit credentials or private operational data.
 
-For more information, be sure to check out our [Open WebUI Documentation](https://docs.openwebui.com/).
+## Service identity
 
-## Key Features of Open WebUI ⭐
+| Item | CamCore contract |
+| --- | --- |
+| Product | **Jarvis \| CamCore AI** |
+| Purpose | Private AI assistance for CamCore services, infrastructure and productivity |
+| Private service | `https://ai.camcore.network` |
+| Access | CamCore LAN, authorised NetBird access or another explicitly approved private path |
+| Authentication | Microsoft Entra single sign-on with `CamCore.AI.User` and `CamCore.AI.Admin` application roles |
+| Inference | Server-managed OpenAI Chat Completions connection |
+| Operations tools | Separate, private and read-only CamCore Operations Gateway |
+| Upstream | [Open WebUI](https://github.com/open-webui/open-webui) |
+| Production source | [`deploy/camcore/compose.yaml`](deploy/camcore/compose.yaml) |
 
-- 🚀 **Effortless Setup**: Install seamlessly via pip, uv, Docker, or Kubernetes (kubectl, kustomize, or helm), with `:ollama` and `:cuda` tagged images available for container deployments.
+The table describes the repository contract. Confirm the live route, running image digest, integrations and acceptance checks separately after every deployment.
 
-- 🤝 **Broad Model & API Integration**: Connect any OpenAI-compatible API alongside local Ollama models. Point the API URL at **LMStudio, GroqCloud, Mistral, OpenRouter, vLLM, and more** to mix and match providers freely.
+## CamCore operating model
 
-- 🔐 **Granular RBAC & User Groups**: Administrators define detailed roles, groups, and permissions, giving each user exactly the access they need. Secure by default, with tailored experiences per group.
+The CamCore production profile deliberately narrows the much broader upstream Open WebUI feature set:
 
-- 🧩 **Plugin Support**: Extend Open WebUI with **Filters**, **Actions**, **Pipes**, **Tools**, and **Skills**. Connect external services through **MCP**, **MCPO**, and **OpenAPI tool servers**. Build custom integrations, rate limits, approval flows, data connections, and more.
+- Microsoft Entra is the only sign-in path; local signup and password authentication are disabled.
+- OpenAI is the production inference provider through Chat Completions. Local Ollama inference is disabled.
+- CamCore Operations is supplied by the standalone [`camcoreau/camcore-ai-gateway`](https://github.com/camcoreau/camcore-ai-gateway), not by the legacy OpenJarvis runtime.
+- The approved Operations surface is read-only and bounded. Modifying infrastructure actions require a separately designed confirmation and audit boundary before they can be enabled.
+- Production configuration is controlled by Git and the Portainer stack environment. Admin-panel changes are intentionally non-persistent.
+- The service remains private, publishes no host port and runs as a single replica with persistent SQLite data.
 
-- 🤖 **Models & Agents**: Wrap any base model with custom instructions, tools, and knowledge to build specialized agents. Supports dynamic variables, per-user/group access control, and community preset imports via [Open WebUI Community](https://openwebui.com/).
+This deployment is not an offline or fully local AI stack. Runtime downloads and update checks are suppressed, while approved connections to Microsoft Entra, OpenAI and the private CamCore Operations Gateway remain required.
 
-- 📝 **Notes**: A dedicated workspace for content outside conversations. Draft with a rich editor, use AI to rewrite selected text, and attach notes to any chat for full-context injection.
+Generic upstream `pip`, Docker and Ollama quick starts are useful for upstream evaluation, but they are not supported CamCore production instructions. Use the [CamCore deployment runbook](deploy/camcore/README.md) for the managed service and the [upstream documentation](https://docs.openwebui.com/) for general Open WebUI use.
 
-- 📢 **Channels**: Real-time shared spaces where your team and AI models collaborate in one timeline. Tag models to draft or critique, with threads, reactions, pins, and access control.
+Responses mode is temporarily disabled after live acceptance rejected the previous migration. Do not re-enable it until ordinary streaming and the complete reasoning-plus-tool continuation have both passed live validation.
 
-- 🧠 **Persistent Memory**: The AI remembers facts about you across conversations, carrying context from one chat to the next.
+## Production architecture
 
-- ✅ **Live Workflow & Message Flow**: Watch the AI build and work through checklists in real time. Queue messages while the AI is still responding; they send automatically when it's ready.
-
-- 📅 **Calendar & AI Scheduling**: Built-in personal and shared calendars with month/week/day views, recurring events, color coding, attendees, and reminders. Models manage your schedule conversationally through native function calling.
-
-- ⏱️ **Automations**: Schedule prompts to run on recurring schedules, with runs surfaced on your calendar and each completed run linking back to the chat it produced.
-
-- 📱 **Responsive Design & PWA**: Seamless experience across desktop, laptop, and mobile, with a Progressive Web App for native app-like feel and offline access on localhost.
-
-- ✒️🔢 **Full Markdown and LaTeX Support**: Comprehensive Markdown and LaTeX capabilities for enriched interaction.
-
-- 🎤📹 **Hands-Free Voice/Video Call**: Integrated voice and video calls with multiple Speech-to-Text providers (Local Whisper, OpenAI, Deepgram, Azure) and Text-to-Speech engines (Azure, ElevenLabs, OpenAI, Transformers, WebAPI).
-
-- 💾 **Persistent Artifact Storage**: Built-in key-value storage API for artifacts, enabling journals, trackers, leaderboards, and collaborative tools with personal and shared data scopes.
-
-- 📚 **Local RAG Integration**: Retrieval Augmented Generation backed by 9 vector databases and multiple content-extraction engines (Tika, Docling, Document Intelligence, Mistral OCR, PaddleOCR-vl, external loaders). Supports hybrid search (BM25 + vector) with reranking and full-context mode. Load documents into chat or pull them from your library with the `#` command.
-
-- 🔍 **Web Search for RAG**: Search the web through dozens of providers including `SearXNG`, `Google PSE`, `Brave Search`, `Kagi`, `Mojeek`, `Tavily`, `Perplexity`, `Firecrawl`, `serpstack`, `serper`, `Serply`, `DuckDuckGo`, `SearchApi`, `SerpApi`, `Bing`, `Jina`, `Exa`, `Sougou`, `Azure AI Search`, and `Ollama Cloud`, injecting results directly into the conversation.
-
-- 🌐 **Web Browsing Capability**: Pull websites into chat with the `#` command followed by a URL, or let the model fetch them on its own when needed.
-
-- 🎨 **Image Generation & Editing**: Create and edit images with multiple engines including OpenAI DALL·E, Gemini, ComfyUI (local), and AUTOMATIC1111 (local), supporting both generation and prompt-based editing.
-
-- ⚙️ **Multi-Model Conversations**: Engage several models at once, harnessing their individual strengths in parallel for the best possible responses.
-
-- 📊 **Usage Analytics & Model Evaluation**: Admin dashboards track message volume, token consumption, and cost across users and models. Evaluate models with a built-in arena, A/B testing, and ELO-based leaderboards.
-
-- 🗄️ **Flexible Database & Storage**: Choose SQLite (with optional encryption) or PostgreSQL, and store files locally or on S3, Google Cloud Storage, or Azure Blob Storage.
-
-- 🧬 **Advanced Vector Database Support**: Pick from 9 vector databases: ChromaDB, PGVector, Qdrant, Milvus, Elasticsearch, OpenSearch, Pinecone, S3Vector, and Oracle 23ai.
-
-- 🪪 **Enterprise Authentication & Provisioning**: Full LDAP/Active Directory integration, SSO via trusted headers and OAuth providers, and SCIM 2.0 automated provisioning for identity providers like Okta, Azure AD, and Google Workspace.
-
-- ☁️ **Cloud-Native File Integration**: Native Google Drive and OneDrive/SharePoint file picking for seamless document import from enterprise cloud storage.
-
-- 🔭 **Production Observability**: Built-in OpenTelemetry support for traces, metrics, and logs, plugging into your existing monitoring stack.
-
-- ⚖️ **Horizontal Scalability**: Redis-backed session management and WebSocket support for multi-worker, multi-node deployments behind load balancers.
-
-- 🌐🌍 **Multilingual Support**: Use Open WebUI in your preferred language with i18n support. We're actively seeking contributors to expand language coverage!
-
-- 🌟 **Continuous Updates**: We're committed to improving Open WebUI with regular updates, fixes, and new features.
-
-- 🛡️ **Transparent Security Process**: Security reports are triaged, fixed, and published as open advisories through a documented responsible-disclosure process. See our [Security Policy](https://github.com/open-webui/open-webui/security).
-
-Want to learn more about Open WebUI's features? Check out our [Open WebUI documentation](https://docs.openwebui.com/features) for a comprehensive overview!
-
-## The Open WebUI Ecosystem 🌐
-
-Open WebUI is the core, surrounded by companion apps and infrastructure that extend what your AI can do, where it can reach, and how you run it:
-
-- 💻 **Open WebUI Computer** ([open-webui/computer](https://github.com/open-webui/computer)): A standalone, mobile-first computer and coding agent that runs on the machine you own. Files, terminal, and git in a browser tab, reachable from your phone. Connect it into Open WebUI as a model, or reach it from Telegram, WhatsApp, and more.
-
-- ⚡ **Open Terminal** and **Terminals (Enterprise)** ([open-webui/open-terminal](https://github.com/open-webui/open-terminal) & [open-webui/terminals](https://github.com/open-webui/terminals)): A self-hosted computing environment that plugs into Open WebUI, giving the AI a place to write code, run it, read output, fix errors, and iterate inside the chat. Terminals gives you per-user isolated containers with separate credentials, resource limits, and network rules. Automatic lifecycle management on Docker or Kubernetes.
-
-- 🔄 **oikb** ([open-webui/oikb](https://github.com/open-webui/oikb)): Feed your Knowledge Bases from 45+ sources (GitHub, Confluence, ServiceNow, Salesforce, Jira, Slack, SharePoint, Notion, and more), keeping the tools your team already uses continuously in sync.
-
-- 🖥️ **Native Desktop App** ([open-webui/desktop](https://github.com/open-webui/desktop)): Run Open WebUI as a native app on macOS, Windows, and Linux. System-wide Spotlight chat bar with screenshot capture, push-to-talk voice, and optional fully-local inference via a built-in llama.cpp engine.
-
-Want to learn more? Check out our [Open WebUI documentation](https://docs.openwebui.com) for more details!
-
----
-
-We are incredibly grateful for the generous support of our sponsors. Their contributions help us to maintain and improve our project, ensuring we can continue to deliver quality work to our community. Thank you!
-
-## How to Install 🚀
-
-### Installation via Python pip 🐍
-
-Open WebUI can be installed using pip, the Python package installer. Before proceeding, ensure you're using **Python 3.11** to avoid compatibility issues.
-
-1. **Install Open WebUI**:
-   Open your terminal and run the following command to install Open WebUI:
-
-   ```bash
-   pip install open-webui
-   ```
-
-2. **Running Open WebUI**:
-   After installation, you can start Open WebUI by executing:
-
-   ```bash
-   open-webui serve
-   ```
-
-This will start the Open WebUI server, which you can access at [http://localhost:8080](http://localhost:8080)
-
-### Quick Start with Docker 🐳
-
-> [!NOTE]  
-> Please note that for certain Docker environments, additional configurations might be needed. If you encounter any connection issues, our detailed guide on [Open WebUI Documentation](https://docs.openwebui.com/) is ready to assist you.
-
-> [!WARNING]
-> When using Docker to install Open WebUI, make sure to include the `-v open-webui:/app/backend/data` in your Docker command. This step is crucial as it ensures your database is properly mounted and prevents any loss of data.
-
-> [!TIP]  
-> If you wish to utilize Open WebUI with Ollama included or CUDA acceleration, we recommend utilizing our official images tagged with either `:cuda` or `:ollama`. To enable CUDA, you must install the [Nvidia CUDA container toolkit](https://docs.nvidia.com/dgx/nvidia-container-runtime-upgrade/) on your Linux/WSL system.
-
-### Installation with Default Configuration
-
-- **If Ollama is on your computer**, use this command:
-
-  ```bash
-  docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway -v open-webui:/app/backend/data --name open-webui --restart always ghcr.io/open-webui/open-webui:main
-  ```
-
-- **If Ollama is on a Different Server**, use this command:
-
-  To connect to Ollama on another server, change the `OLLAMA_BASE_URL` to the server's URL:
-
-  ```bash
-  docker run -d -p 3000:8080 -e OLLAMA_BASE_URL=https://example.com -v open-webui:/app/backend/data --name open-webui --restart always ghcr.io/open-webui/open-webui:main
-  ```
-
-- **To run Open WebUI with Nvidia GPU support**, use this command:
-
-  ```bash
-  docker run -d -p 3000:8080 --gpus all --add-host=host.docker.internal:host-gateway -v open-webui:/app/backend/data --name open-webui --restart always ghcr.io/open-webui/open-webui:cuda
-  ```
-
-### Installation for OpenAI API Usage Only
-
-- **If you're only using OpenAI API**, use this command:
-
-  ```bash
-  docker run -d -p 3000:8080 -e OPENAI_API_KEY=your_secret_key -v open-webui:/app/backend/data --name open-webui --restart always ghcr.io/open-webui/open-webui:main
-  ```
-
-### Installing Open WebUI with Bundled Ollama Support
-
-This installation method uses a single container image that bundles Open WebUI with Ollama, allowing for a streamlined setup via a single command. Choose the appropriate command based on your hardware setup:
-
-- **With GPU Support**:
-  Utilize GPU resources by running the following command:
-
-  ```bash
-  docker run -d -p 3000:8080 --gpus=all -v ollama:/root/.ollama -v open-webui:/app/backend/data --name open-webui --restart always ghcr.io/open-webui/open-webui:ollama
-  ```
-
-- **For CPU Only**:
-  If you're not using a GPU, use this command instead:
-
-  ```bash
-  docker run -d -p 3000:8080 -v ollama:/root/.ollama -v open-webui:/app/backend/data --name open-webui --restart always ghcr.io/open-webui/open-webui:ollama
-  ```
-
-Both commands facilitate a built-in, hassle-free installation of both Open WebUI and Ollama, ensuring that you can get everything up and running swiftly.
-
-After installation, you can access Open WebUI at [http://localhost:3000](http://localhost:3000). Enjoy! 😄
-
-### Other Installation Methods
-
-We offer various installation alternatives, including non-Docker native installation methods, Docker Compose, Kustomize, and Helm. Visit our [Open WebUI Documentation](https://docs.openwebui.com/getting-started/) or join our [Discord community](https://discord.gg/5rJgQTnV4s) for comprehensive guidance.
-
-### Troubleshooting
-
-Encountering connection issues? Our [Open WebUI Documentation](https://docs.openwebui.com/troubleshooting/) has got you covered. For further assistance and to join our vibrant community, visit the [Open WebUI Discord](https://discord.gg/5rJgQTnV4s).
-
-#### Open WebUI: Server Connection Error
-
-If you're experiencing connection issues, it’s often due to the WebUI docker container not being able to reach the Ollama server at 127.0.0.1:11434 (host.docker.internal:11434) inside the container . Use the `--network=host` flag in your docker command to resolve this. Note that the port changes from 3000 to 8080, resulting in the link: `http://localhost:8080`.
-
-**Example Docker Command**:
-
-```bash
-docker run -d --network=host -v open-webui:/app/backend/data -e OLLAMA_BASE_URL=http://127.0.0.1:11434 --name open-webui --restart always ghcr.io/open-webui/open-webui:main
+```text
+Authorised user
+      |
+      | Microsoft Entra sign-in
+      v
+Private HTTPS route: ai.camcore.network
+      |
+      v
+Nginx Proxy Manager on npm-backend
+      |
+      v
+Jarvis | CamCore AI
+      |-- HTTPS --> OpenAI Chat Completions API
+      `-- HTTPS --> ai-tools.camcore.network --> CamCore Operations Gateway
 ```
 
-### Keeping Your Docker Installation Up-to-Date
+Open WebUI joins only `npm-backend`. The Operations Gateway is deployed independently, publishes no host port and shares the dedicated `camcore-ai-operations` network only with Nginx Proxy Manager. Open WebUI, Ollama, OpenJarvis and unrelated containers must not join that gateway network.
 
-Check our Updating Guide available in our [Open WebUI Documentation](https://docs.openwebui.com/getting-started/updating).
+## Security posture
 
-### Using the Dev Branch 🌙
+The production contract enforces these boundaries:
 
-> [!WARNING]
-> The `:dev` branch contains the latest unstable features and changes. Use it at your own risk as it may have bugs or incomplete features.
+- the image is pinned by immutable tag and `sha256` digest;
+- all Linux capabilities are dropped and `no-new-privileges`, a PID limit, bounded temporary storage, health checks and rotated logs are enabled;
+- Entra application assignment and CamCore application roles are the admission boundary;
+- administrator access control remains enforced even though provider-model access is intentionally granted to admitted users;
+- provider, gateway, OAuth and encryption secrets stay server-side in Portainer or the approved secret store;
+- tool-server TLS certificate verification remains enabled;
+- plugins, package installation, user API keys, direct connections, terminal servers, code execution, web retrieval, uploads, public sharing and other unapproved extension surfaces remain disabled; and
+- audit output records metadata rather than prompt or response bodies.
 
-If you want to try out the latest bleeding-edge features and are okay with occasional instability, you can use the `:dev` tag like this:
+On a new or reset data volume, the first OAuth user is promoted to administrator by the pinned upstream runtime. Assign only the designated bootstrap operator to `CamCore.AI.Admin` and complete that login first. Verify the administrator, complete a second emergency-administrator login, and only then assign ordinary members.
 
-```bash
-docker run -d -p 3000:8080 -v open-webui:/app/backend/data --name open-webui --add-host=host.docker.internal:host-gateway --restart always ghcr.io/open-webui/open-webui:dev
-```
+Copy required variable names from [`deploy/camcore/.env.example`](deploy/camcore/.env.example). Never commit populated values. Generate independent high-entropy credentials, keep stable encryption keys across restarts and trust only the exact `npm-backend` subnet rather than `*` or `0.0.0.0/0`.
 
-### Offline Mode
+## Repository map
 
-If you are running Open WebUI in an offline environment, you can set the `HF_HUB_OFFLINE` environment variable to `1` to prevent attempts to download models from the internet.
+| Path | Purpose |
+| --- | --- |
+| [`deploy/camcore/compose.yaml`](deploy/camcore/compose.yaml) | Authoritative production service, image, network, identity and security contract |
+| [`deploy/camcore/.env.example`](deploy/camcore/.env.example) | Required Portainer input names without secret values |
+| [`deploy/camcore/README.md`](deploy/camcore/README.md) | Deployment, Entra, networking, provider, gateway and acceptance runbook |
+| [`deploy/camcore/BRANDING.md`](deploy/camcore/BRANDING.md) | CamCore identity, upstream compatibility, licence boundary and upgrade process |
+| [`deploy/camcore/branding/`](deploy/camcore/branding/) | Fail-closed visual, tool-server and runtime compatibility layer |
+| [`deploy/camcore/ROLLBACK.md`](deploy/camcore/ROLLBACK.md) | Current production rollback contract |
+| [`.github/workflows/camcore-deployment.yml`](.github/workflows/camcore-deployment.yml) | Production Compose and security-contract validation |
+| [`.github/workflows/camcore-branding-image.yml`](.github/workflows/camcore-branding-image.yml) | Reviewed image build, SBOM, provenance and immutable release output |
 
-```bash
-export HF_HUB_OFFLINE=1
-```
+Release-specific status notes are evidence for their named release only. The production Compose file, current runbook and live post-deployment checks take precedence over an older status or validation note.
 
-## What's Next? 🌟
+## Change and release model
 
-Discover upcoming features on our roadmap in the [Open WebUI Documentation](https://docs.openwebui.com/roadmap/).
+CamCore changes use a reviewable, source-controlled workflow:
 
-## License 📜
+1. Fetch and verify current `main` before editing.
+2. Make the smallest coherent change on an `agent/*` branch and preserve upstream compatibility.
+3. Review the diff for secrets, private data, trust-boundary changes and accidental upstream drift.
+4. Open a pull request and wait for the relevant repository validation to pass.
+5. For branding or runtime changes, let the branding workflow build the reviewed source with its SBOM and provenance attestations.
+6. Take the workflow's immutable image digest and pin it in a separate production Compose change. Never deploy `latest`, `camcore-current` or another mutable tag by itself.
+7. Back up the persistent data, deploy through the approved Portainer process and complete the runbook's acceptance checks.
+8. Record the exact source, image, deployment and live-verification state in the relevant operational change record.
 
-This project contains code under multiple licenses. The current codebase includes components licensed under the Open WebUI License with an additional requirement to preserve the "Open WebUI" branding, as well as prior contributions under their respective original licenses. For a detailed record of license changes and the applicable terms for each section of the code, please refer to [LICENSE_HISTORY](./LICENSE_HISTORY). For complete and updated licensing details, please see the [LICENSE](./LICENSE) and [LICENSE_HISTORY](./LICENSE_HISTORY) files.
+GitHub Actions is the authoritative full validation environment. For documentation-only work, also run `git diff --check` and verify every relative link and operational claim against the current deployment files.
 
-## Support 💬
+## Deployment verification
 
-If you have any questions, suggestions, or need assistance, please open an issue or join our
-[Open WebUI Discord community](https://discord.gg/5rJgQTnV4s) to connect with us! 🤝
+A release is not complete until the operator confirms, at minimum:
 
-## Security 🛡️
+- the container is healthy and both `/health` and `/ready` succeed;
+- the running image matches the approved immutable digest;
+- no host port is published and only the approved networks are attached;
+- Entra-only sign-in and both CamCore application roles behave correctly;
+- a basic OpenAI chat completes without exposing or re-entering the provider key;
+- CamCore Operations loads through verified TLS and remains read-only;
+- disabled signup, sharing, upload, execution, retrieval and extension surfaces remain unavailable;
+- configuration, CamCore identity and starter content return after a container recreation; and
+- neither the AI workspace nor its tool gateway is exposed through public CamCore ingress.
 
-If you believe you've found a security vulnerability, or something that shouldn't be disclosed publicly, please [reach out confidentially through our responsible disclosure program on GitHub](https://github.com/open-webui/open-webui/security). We accept reports only through GitHub, not through any other platform. Thank you for helping us keep Open WebUI secure!
+Use the complete checklist in [`deploy/camcore/README.md`](deploy/camcore/README.md).
 
-## Star History
+## Backup and rollback
 
-<a href="https://star-history.com/#open-webui/open-webui&Date">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=open-webui/open-webui&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=open-webui/open-webui&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=open-webui/open-webui&type=Date" />
-  </picture>
-</a>
+`camcore-open-webui-data` contains the SQLite database and chat data. Take an encrypted cold backup before an upgrade, verify that it can be restored and retain the previous image with its matching pre-upgrade snapshot.
 
----
+Never use `docker compose down --volumes` for an ordinary deployment. SQLite remains a single-worker, single-replica design until a reviewed migration introduces PostgreSQL, Redis and shared storage.
 
-Created by [Timothy Jaeryang Baek](https://github.com/tjbck) - Let's make Open WebUI even more amazing together! 💪
+If acceptance fails, follow [`deploy/camcore/ROLLBACK.md`](deploy/camcore/ROLLBACK.md), restore the matching image and data state, then re-run the health, identity, access and core-chat checks.
+
+## Upstream relationship
+
+This repository is a maintained downstream of Open WebUI. CamCore changes should stay narrow and reviewable so upstream security fixes and improvements can be adopted without turning the fork into an unrelated rewrite.
+
+Before an upstream upgrade:
+
+1. review the new release notes and licence;
+2. confirm that the CamCore branding remains permitted;
+3. pin the exact upstream version, source revision and image digest;
+4. re-review every fail-closed compatibility patch against that source;
+5. rebuild and validate the CamCore image; and
+6. promote the new digest only through a separate reviewed deployment change.
+
+General Open WebUI documentation, feature requests and upstream product issues belong with the [upstream project](https://github.com/open-webui/open-webui). CamCore deployment, branding and operational matters belong with CamCore.
+
+## Support and security reporting
+
+For CamCore service help, use the [CamCore Support page](https://camcore.au/support) or email [help@camcore.au](mailto:help@camcore.au).
+
+Do not place credentials, tokens, private topology, personal data or sensitive logs in a public issue. Report CamCore-specific security or deployment concerns through the approved private CamCore support path. Report vulnerabilities in the upstream Open WebUI product through [Open WebUI's private security reporting process](https://github.com/open-webui/open-webui/security).
+
+## Licence and attribution
+
+This repository contains code governed by multiple licences. See [`LICENSE_NOTICE`](LICENSE_NOTICE), [`LICENSE`](LICENSE) and [`LICENSE_HISTORY`](LICENSE_HISTORY) for the applicable terms and history.
+
+The CamCore downstream retains Open WebUI copyright, attribution, repository provenance, bundled licence notices, SBOM and image ancestry. The CamCore identity layer may be deployed only while the deployment has no more than 50 end users in any rolling 30-day period, or while separate written or enterprise permission exists. See [`deploy/camcore/BRANDING.md`](deploy/camcore/BRANDING.md) before building, distributing or upgrading the branded image.
+
+## Ownership
+
+The CamCore deployment overlay is maintained as part of the private CamCore Network. Open WebUI remains the upstream project of Open WebUI Inc. and its contributors.
