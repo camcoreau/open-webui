@@ -172,6 +172,8 @@ jobs:
               branding / "custom.css",
               branding / "loader.js",
               branding / "camcore-mark.svg",
+              branding / "patch_openai_responses.py",
+              branding / "test_patch_openai_responses.py",
               branding / "patch_tool_servers.py",
           ):
               assert path.is_file() and path.stat().st_size > 0, f"missing CamCore asset: {path}"
@@ -179,6 +181,9 @@ jobs:
           patcher = (branding / "patch_tool_servers.py").read_text()
           assert "Tools.get_tools_by_ids(tool_ids) if ENABLE_PLUGINS else {}" in patcher
           assert "elif tool_id.startswith('server:') or ENABLE_PLUGINS:" in patcher
+
+          responses_patcher = (branding / "patch_openai_responses.py").read_text()
+          assert "responses_payload.pop('reasoning_effort', None)" in responses_patcher
 
           runbook = Path("deploy/camcore/README.md").read_text()
           assert "CAMCORE_AI_OPENAI_API_KEY" in runbook
