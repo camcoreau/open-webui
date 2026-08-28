@@ -51,8 +51,8 @@ jobs:
 
           expected_image = (
               "ghcr.io/camcoreau/open-webui:camcore-"
-              "48ee21e11cb10ce95f63641b368322c7b16f34eb@"
-              "sha256:96e51a5f4d6e42ee35979d2695d58efc35e5cf6d671ac1fa3e9fd3b47d6b6f13"
+              "4d85a50720f227d69c85dc6256fdbdc970ce138a@"
+              "sha256:cfc5c4e4d63e8779d86d1cc56807555dc42b0d65217af0c6efbd209eaf30ff7d"
           )
           rendered = json.loads(Path("/tmp/camcore-open-webui.json").read_text())
           assert set(rendered["services"]) == {"open-webui"}
@@ -97,7 +97,6 @@ jobs:
               "ENABLE_OPENAI_API": "true",
               "OPENAI_API_BASE_URL": "https://api.openai.com/v1",
               "OPENAI_API_KEY": "ci-openai-key",
-              "ENABLE_RESPONSES_API_STATEFUL": "false",
               "ENABLE_BASE_MODELS_CACHE": "false",
               "ENABLE_OLLAMA_API": "false",
               "ENABLE_FORWARD_USER_INFO_HEADERS": "false",
@@ -133,7 +132,6 @@ jobs:
                   "prefix_id": "",
                   "model_ids": [],
                   "connection_type": "external",
-                  "api_type": "responses",
                   "auth_type": "bearer",
                   "passthrough_params": [],
               }
@@ -201,8 +199,6 @@ jobs:
           assert "ai-tools.camcore.network" in runbook
           assert "camcoreau/camcore-ai-gateway" in runbook
           assert "gateway is deployed by `camcoreau/jarvis`" not in runbook.lower()
-          assert "ENABLE_RESPONSES_API_STATEFUL=false" in runbook
-          assert "store=false" in runbook
 
       - name: Verify required inputs fail closed
         shell: bash
