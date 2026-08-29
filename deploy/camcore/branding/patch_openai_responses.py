@@ -67,6 +67,7 @@ RESPONSES_ALLOWED_FIELDS: dict[str, set[str]] = {
         'namespace',
         'status',
     },
+    # Returned function outputs carry status, but create input rejects it.
     'function_call_output': {
         'id',
         'type',
@@ -75,7 +76,6 @@ RESPONSES_ALLOWED_FIELDS: dict[str, set[str]] = {
         'caller',
         'name',
         'namespace',
-        'status',
     },
 }
 RESPONSES_ITEM_STATUSES = {'in_progress', 'completed', 'incomplete'}
