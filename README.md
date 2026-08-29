@@ -15,17 +15,17 @@ This public repository is the source of truth for CamCore's Open WebUI downstrea
 
 ## Service identity
 
-| Item | CamCore contract |
-| --- | --- |
-| Product | **Jarvis \| CamCore AI** |
-| Purpose | Private AI assistance for CamCore services, infrastructure and productivity |
-| Private service | `https://ai.camcore.network` |
-| Access | CamCore LAN, authorised NetBird access or another explicitly approved private path |
-| Authentication | Microsoft Entra single sign-on with `CamCore.AI.User` and `CamCore.AI.Admin` application roles |
-| Inference | Server-managed OpenAI Chat Completions connection |
-| Operations tools | Separate, private and read-only CamCore Operations Gateway |
-| Upstream | [Open WebUI](https://github.com/open-webui/open-webui) |
-| Production source | [`deploy/camcore/compose.yaml`](deploy/camcore/compose.yaml) |
+| Item              | CamCore contract                                                                               |
+| ----------------- | ---------------------------------------------------------------------------------------------- |
+| Product           | **Jarvis \| CamCore AI**                                                                       |
+| Purpose           | Private AI assistance for CamCore services, infrastructure and productivity                    |
+| Private service   | `https://ai.camcore.network`                                                                   |
+| Access            | CamCore LAN, authorised NetBird access or another explicitly approved private path             |
+| Authentication    | Microsoft Entra single sign-on with `CamCore.AI.User` and `CamCore.AI.Admin` application roles |
+| Inference         | Server-managed OpenAI Chat Completions connection                                              |
+| Operations tools  | Separate, private and read-only CamCore Operations Gateway                                     |
+| Upstream          | [Open WebUI](https://github.com/open-webui/open-webui)                                         |
+| Production source | [`deploy/camcore/compose.yaml`](deploy/camcore/compose.yaml)                                   |
 
 The table describes the repository contract. Confirm the live route, running image digest, integrations and acceptance checks separately after every deployment.
 
@@ -85,16 +85,16 @@ Copy required variable names from [`deploy/camcore/.env.example`](deploy/camcore
 
 ## Repository map
 
-| Path | Purpose |
-| --- | --- |
-| [`deploy/camcore/compose.yaml`](deploy/camcore/compose.yaml) | Authoritative production service, image, network, identity and security contract |
-| [`deploy/camcore/.env.example`](deploy/camcore/.env.example) | Required Portainer input names without secret values |
-| [`deploy/camcore/README.md`](deploy/camcore/README.md) | Deployment, Entra, networking, provider, gateway and acceptance runbook |
-| [`deploy/camcore/BRANDING.md`](deploy/camcore/BRANDING.md) | CamCore identity, upstream compatibility, licence boundary and upgrade process |
-| [`deploy/camcore/branding/`](deploy/camcore/branding/) | Fail-closed visual, tool-server and runtime compatibility layer |
-| [`deploy/camcore/ROLLBACK.md`](deploy/camcore/ROLLBACK.md) | Current production rollback contract |
-| [`.github/workflows/camcore-deployment.yml`](.github/workflows/camcore-deployment.yml) | Production Compose and security-contract validation |
-| [`.github/workflows/camcore-branding-image.yml`](.github/workflows/camcore-branding-image.yml) | Reviewed image build, SBOM, provenance and immutable release output |
+| Path                                                                                           | Purpose                                                                          |
+| ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| [`deploy/camcore/compose.yaml`](deploy/camcore/compose.yaml)                                   | Authoritative production service, image, network, identity and security contract |
+| [`deploy/camcore/.env.example`](deploy/camcore/.env.example)                                   | Required Portainer input names without secret values                             |
+| [`deploy/camcore/README.md`](deploy/camcore/README.md)                                         | Deployment, Entra, networking, provider, gateway and acceptance runbook          |
+| [`deploy/camcore/BRANDING.md`](deploy/camcore/BRANDING.md)                                     | CamCore identity, upstream compatibility, licence boundary and upgrade process   |
+| [`deploy/camcore/branding/`](deploy/camcore/branding/)                                         | Fail-closed visual, tool-server and runtime compatibility layer                  |
+| [`deploy/camcore/ROLLBACK.md`](deploy/camcore/ROLLBACK.md)                                     | Current production rollback contract                                             |
+| [`.github/workflows/camcore-deployment.yml`](.github/workflows/camcore-deployment.yml)         | Production Compose and security-contract validation                              |
+| [`.github/workflows/camcore-branding-image.yml`](.github/workflows/camcore-branding-image.yml) | Reviewed image build, SBOM, provenance and immutable release output              |
 
 Release-specific status notes are evidence for their named release only. The production Compose file, current runbook and live post-deployment checks take precedence over an older status or validation note.
 
