@@ -63,6 +63,7 @@ class ResponsesPatchTests(unittest.TestCase):
                 '_is_trailing_empty_ui_placeholder',
                 '_normalize_stored_item',
                 '_normalize_stored_output',
+                '_sanitize_responses_input_items',
                 '_strip_camcore_responses_replay_for_chat',
                 'convert_to_responses_payload',
             },
@@ -73,6 +74,7 @@ class ResponsesPatchTests(unittest.TestCase):
         )
         self.converter = router['convert_to_responses_payload']
         self.clean_chat_payload = router['_strip_camcore_responses_replay_for_chat']
+        self.sanitize_input_items = router['_sanitize_responses_input_items']
         self.attach_replay = middleware['_attach_camcore_responses_replay']
         self.function_call_linkage = middleware['_camcore_function_call_linkage']
 
@@ -308,7 +310,6 @@ class ResponsesPatchTests(unittest.TestCase):
                 {
                     'id': 'fc_1',
                     'type': 'function_call',
-                    'status': 'completed',
                     'call_id': 'call_health',
                     'name': 'health_check',
                     'arguments': '{"service":"camcore"}',
@@ -406,7 +407,7 @@ class ResponsesPatchTests(unittest.TestCase):
 
         expected_second_items = copy.deepcopy(second_items)
         for item in expected_second_items:
-            if item.get('type') == 'function_call_output':
+            if item.get('type') in {'function_call', 'function_call_output'}:
                 item.pop('status', None)
 
         self.assertEqual(result['input'][1:], expected_second_items)
@@ -415,8 +416,8 @@ class ResponsesPatchTests(unittest.TestCase):
             ['rs_1'],
         )
 
-    def test_drops_returned_function_output_status_for_replay(self) -> None:
-        def converted_output(status: str) -> dict:
+    def test_preserves_non_function_status_and_drops_replayed_function_status(self) -> None:
+        def converted_output(item: dict) -> dict:
             result = self.converter(
                 {
                     'model': 'gpt-5.6-luna',
@@ -424,38 +425,111 @@ class ResponsesPatchTests(unittest.TestCase):
                         {
                             'role': 'assistant',
                             'content': '',
-                            'output': [
-                                {
-                                    'id': 'fco_1',
-                                    'type': 'function_call_output',
-                                    'call_id': 'call_1',
-                                    'output': 'healthy',
-                                    'status': status,
-                                }
-                            ],
+                            'output': [item],
                         }
                     ],
                 }
             )
             return result['input'][0]
 
-        completed = converted_output('completed')
-        self.assertEqual(completed['id'], 'fco_1')
-        self.assertNotIn('status', completed)
+        items = [
+            {
+                'id': 'rs_1',
+                'type': 'reasoning',
+                'summary': [],
+                'encrypted_content': 'opaque',
+                'status': 'completed',
+            },
+            {
+                'id': 'msg_1',
+                'type': 'message',
+                'role': 'assistant',
+                'content': [{'type': 'output_text', 'text': 'Done.'}],
+                'status': 'completed',
+            },
+            {
+                'id': 'fc_1',
+                'type': 'function_call',
+                'call_id': 'call_1',
+                'name': 'health_check',
+                'arguments': '{}',
+                'status': 'completed',
+            },
+            {
+                'id': 'fco_1',
+                'type': 'function_call_output',
+                'call_id': 'call_1',
+                'output': 'healthy',
+                'status': 'completed',
+            },
+        ]
 
-        invalid = converted_output('failed')
-        self.assertEqual(invalid['id'], 'fco_1')
-        self.assertNotIn('status', invalid)
+        for item in items:
+            converted = converted_output(item)
+            self.assertEqual(converted['id'], item['id'])
+            if item['type'] in {'function_call', 'function_call_output'}:
+                self.assertNotIn('status', converted)
+            else:
+                self.assertEqual(converted['status'], 'completed')
 
-    def test_live_index_six_replay_drops_only_function_output_status(self) -> None:
+    def test_final_input_sanitizer_catches_function_items_at_any_position(self) -> None:
+        input_items = [
+            {'id': 'rs_1', 'type': 'reasoning', 'status': 'completed'},
+            {
+                'id': 'fc_1',
+                'type': 'function_call',
+                'call_id': 'call_1',
+                'name': 'health_check',
+                'arguments': {'status': 'requested'},
+                'status': 'completed',
+            },
+            {
+                'id': 'fco_1',
+                'type': 'function_call_output',
+                'call_id': 'call_1',
+                'output': {'status': 'healthy'},
+                'status': 'completed',
+            },
+            {'id': 'future_1', 'type': 'future_provider_item', 'status': 'completed'},
+        ]
+        original = copy.deepcopy(input_items)
+
+        sanitized = self.sanitize_input_items(input_items)
+
+        self.assertEqual(sanitized[0]['status'], 'completed')
+        self.assertNotIn('status', sanitized[1])
+        self.assertEqual(sanitized[1]['arguments'], {'status': 'requested'})
+        self.assertNotIn('status', sanitized[2])
+        self.assertEqual(sanitized[2]['output'], {'status': 'healthy'})
+        self.assertEqual(sanitized[3]['status'], 'completed')
+        self.assertEqual(input_items, original)
+
+    def test_historical_input_six_function_call_status_is_not_replayed(self) -> None:
+        def stored_assistant(message_id: str, text: str) -> dict:
+            return {
+                'role': 'assistant',
+                'content': text,
+                'output': [
+                    {
+                        'id': message_id,
+                        'type': 'message',
+                        'status': 'completed',
+                        'role': 'assistant',
+                        'content': [{'type': 'output_text', 'text': text}],
+                    }
+                ],
+            }
+
         result = self.converter(
             {
                 'model': 'gpt-5.6-luna',
                 'messages': [
                     {'role': 'system', 'content': 'Follow CamCore operating policy.'},
-                    {'role': 'developer', 'content': 'Use the health tool for current state.'},
-                    {'role': 'assistant', 'content': 'I will check the current health.'},
-                    {'role': 'user', 'content': 'Check CamCore health'},
+                    {'role': 'user', 'content': 'First question'},
+                    stored_assistant('msg_history_1', 'First answer.'),
+                    {'role': 'user', 'content': 'Second question'},
+                    stored_assistant('msg_history_2', 'Second answer.'),
+                    {'role': 'user', 'content': 'Third question'},
                     {
                         'role': 'assistant',
                         'content': '',
@@ -468,22 +542,12 @@ class ResponsesPatchTests(unittest.TestCase):
                                 'encrypted_content': 'opaque-live-reasoning',
                             },
                             {
-                                'id': 'msg_live',
-                                'type': 'message',
-                                'status': 'completed',
-                                'role': 'assistant',
-                                'phase': 'commentary',
-                                'content': [{'type': 'output_text', 'text': 'Checking CamCore.'}],
-                            },
-                            {
                                 'id': 'fc_live',
                                 'type': 'function_call',
                                 'status': 'completed',
                                 'call_id': 'call_live_health',
                                 'name': 'get_camcore_health',
                                 'arguments': '{}',
-                                'caller': {'type': 'direct'},
-                                'namespace': 'camcore.operations',
                             },
                             {
                                 'id': 'fco_live',
@@ -491,9 +555,14 @@ class ResponsesPatchTests(unittest.TestCase):
                                 'status': 'completed',
                                 'call_id': 'call_live_health',
                                 'output': [{'type': 'input_text', 'text': '{"status":"healthy"}'}],
-                                'caller': {'type': 'direct'},
                                 'name': 'get_camcore_health',
-                                'namespace': 'camcore.operations',
+                            },
+                            {
+                                'id': 'msg_live',
+                                'type': 'message',
+                                'status': 'completed',
+                                'role': 'assistant',
+                                'content': [{'type': 'output_text', 'text': 'CamCore is healthy.'}],
                             },
                         ],
                         '_camcore_responses_replay': 'output',
@@ -508,23 +577,58 @@ class ResponsesPatchTests(unittest.TestCase):
             }
         )
 
-        self.assertEqual(len(result['input']), 7)
-        self.assertEqual(result['input'][3]['encrypted_content'], 'opaque-live-reasoning')
+        self.assertEqual(len(result['input']), 9)
+        self.assertEqual(result['input'][1]['status'], 'completed')
         self.assertEqual(result['input'][3]['status'], 'completed')
-        self.assertEqual(result['input'][4]['phase'], 'commentary')
-        self.assertEqual(result['input'][4]['status'], 'completed')
+        self.assertEqual(result['input'][5]['type'], 'reasoning')
         self.assertEqual(result['input'][5]['status'], 'completed')
+        self.assertEqual(result['input'][6]['type'], 'function_call')
+        self.assertNotIn('status', result['input'][6])
         self.assertEqual(
-            result['input'][6],
+            result['input'][7],
             {
                 'id': 'fco_live',
                 'type': 'function_call_output',
                 'call_id': 'call_live_health',
                 'output': [{'type': 'input_text', 'text': '{"status":"healthy"}'}],
-                'caller': {'type': 'direct'},
                 'name': 'get_camcore_health',
-                'namespace': 'camcore.operations',
             },
+        )
+        self.assertEqual(result['input'][8]['type'], 'message')
+        self.assertEqual(result['input'][8]['status'], 'completed')
+
+    def test_unknown_provider_item_preserves_required_status(self) -> None:
+        result = self.converter(
+            {
+                'model': 'gpt-5.6-luna',
+                'messages': [
+                    {
+                        'role': 'assistant',
+                        'content': '',
+                        'output': [
+                            {
+                                'id': 'future_1',
+                                'type': 'future_provider_item',
+                                'status': 'completed',
+                                'future_field': {'status': 'preserved-tool-data'},
+                                'started_at': 1,
+                            }
+                        ],
+                    }
+                ],
+            }
+        )
+
+        self.assertEqual(
+            result['input'],
+            [
+                {
+                    'id': 'future_1',
+                    'type': 'future_provider_item',
+                    'status': 'completed',
+                    'future_field': {'status': 'preserved-tool-data'},
+                }
+            ],
         )
 
     def test_drops_only_a_trailing_empty_placeholder(self) -> None:
@@ -558,7 +662,9 @@ class ResponsesPatchTests(unittest.TestCase):
             }
         )
 
-        self.assertEqual(result['input'], [non_trailing_empty, function_call])
+        expected_function_call = copy.deepcopy(function_call)
+        expected_function_call.pop('status')
+        self.assertEqual(result['input'], [non_trailing_empty, expected_function_call])
 
     def test_middleware_attaches_native_replay_and_removes_trailing_placeholder(self) -> None:
         output = [

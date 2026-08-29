@@ -57,6 +57,7 @@ CAMCORE_RESPONSES_REPLAY_FIELD = '_camcore_responses_replay'
 RESPONSES_ALLOWED_FIELDS: dict[str, set[str]] = {
     'reasoning': {'id', 'type', 'summary', 'content', 'encrypted_content', 'status'},
     'message': {'id', 'type', 'role', 'content', 'status', 'phase'},
+    # Compatibility: provider-returned status was rejected on stateless create replay.
     'function_call': {
         'id',
         'type',
@@ -65,9 +66,8 @@ RESPONSES_ALLOWED_FIELDS: dict[str, set[str]] = {
         'arguments',
         'caller',
         'namespace',
-        'status',
     },
-    # Returned function outputs carry status, but create input rejects it.
+    # Apply the same create-boundary normalization to local function outputs.
     'function_call_output': {
         'id',
         'type',
@@ -143,6 +143,20 @@ def _normalize_stored_output(stored_output: list) -> list[dict]:
     return normalized_items
 
 
+def _sanitize_responses_input_items(input_items: list) -> list:
+    \"\"\"Remove optional function lifecycle status for compatible stateless replay.\"\"\"
+    sanitized_items = []
+    for item in input_items:
+        if isinstance(item, dict) and item.get('type') in {
+            'function_call',
+            'function_call_output',
+        }:
+            item = dict(item)
+            item.pop('status', None)
+        sanitized_items.append(item)
+    return sanitized_items
+
+
 def _strip_camcore_responses_replay_for_chat(payload: dict) -> dict:
     \"\"\"Remove internal replay fields while preserving Chat Completions messages.\"\"\"
     messages = payload.get('messages')
@@ -207,7 +221,10 @@ ROUTER_PAYLOAD_EXPECTED = """    responses_payload = {**payload, 'input': input_
     # Forward previous_response_id when the middleware has set it
 """
 
-ROUTER_PAYLOAD_REPLACEMENT = """    responses_payload = {**payload, 'input': input_items}
+ROUTER_PAYLOAD_REPLACEMENT = """    responses_payload = {
+        **payload,
+        'input': _sanitize_responses_input_items(input_items),
+    }
 
     # The standard model setting uses the Chat Completions field name. The
     # Responses API expects the same value nested under reasoning.effort.
@@ -479,6 +496,7 @@ def patch_router(target: Path) -> None:
         "'phase'",
         'latest_replay_index',
         "replay_action == 'skip'",
+        "'input': _sanitize_responses_input_items(input_items)",
         '_strip_camcore_responses_replay_for_chat(payload)',
     )
     missing = [marker for marker in required if marker not in source]
