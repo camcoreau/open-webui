@@ -10,7 +10,7 @@ and stateless Responses compatibility layer on top of the exact approved Open
 WebUI v0.11.1 runtime:
 
 ```text
-ghcr.io/camcoreau/open-webui:camcore-df795330c00f882677f59671237df80085195694@sha256:5dfe2d84196b927be7d003e5f93cbd038e6accdba820c28d29737241e6541881
+ghcr.io/camcoreau/open-webui:camcore-97bdadb845fd0f5c39a1c069b29bed8463f23787@sha256:d86d644c8864a82d99201d5a9b3f8c99c33d23d8c2531e5debf3a2d305a157d1
 ```
 
 The service publishes no host port. Nginx Proxy Manager reaches Open WebUI over
