@@ -55,9 +55,10 @@ def _normalize_stored_item(item: dict) -> dict:
 ROUTER_FIELDS_REPLACEMENT = """# Provider fields accepted when replaying Responses output as input.
 CAMCORE_RESPONSES_REPLAY_FIELD = '_camcore_responses_replay'
 RESPONSES_ALLOWED_FIELDS: dict[str, set[str]] = {
-    'reasoning': {'id', 'type', 'summary', 'content', 'encrypted_content', 'status'},
+    # Reasoning status is populated on output but rejected on stateless create replay.
+    'reasoning': {'id', 'type', 'summary', 'content', 'encrypted_content'},
     'message': {'id', 'type', 'role', 'content', 'status', 'phase'},
-    # Compatibility: provider-returned status was rejected on stateless create replay.
+    # Custom-function status is unnecessary when replaying completed output as input.
     'function_call': {
         'id',
         'type',
@@ -144,10 +145,11 @@ def _normalize_stored_output(stored_output: list) -> list[dict]:
 
 
 def _sanitize_responses_input_items(input_items: list) -> list:
-    \"\"\"Remove optional function lifecycle status for compatible stateless replay.\"\"\"
+    \"\"\"Remove create-incompatible top-level output-item lifecycle status.\"\"\"
     sanitized_items = []
     for item in input_items:
         if isinstance(item, dict) and item.get('type') in {
+            'reasoning',
             'function_call',
             'function_call_output',
         }:
@@ -158,7 +160,7 @@ def _sanitize_responses_input_items(input_items: list) -> list:
 
 
 def _sanitize_responses_payload_for_send(payload: dict, *, is_responses: bool) -> dict:
-    \"\"\"Enforce custom-function input compatibility at the wire boundary.\"\"\"
+    \"\"\"Enforce stateless Responses input compatibility at the wire boundary.\"\"\"
     input_items = payload.get('input')
     if not is_responses or not isinstance(input_items, list):
         return payload
@@ -294,7 +296,7 @@ ROUTER_SEND_REPLACEMENT = """    is_streaming_request = bool(payload.get('stream
         payload.pop('stream_options', None)
 
     # Reapply the compatibility guard at the final transport boundary. This
-    # catches any status-bearing custom function item introduced after the
+    # catches any status-bearing replay item introduced after the
     # initial Chat Completions-to-Responses conversion.
     payload = _sanitize_responses_payload_for_send(
         payload,
@@ -315,7 +317,7 @@ ROUTER_SEND_CODEC_REPLACEMENT = """    is_streaming_request = bool(payload.get('
         payload.pop('stream_options', None)
 
     # Reapply the compatibility guard at the final transport boundary. This
-    # catches any status-bearing custom function item introduced after the
+    # catches any status-bearing replay item introduced after the
     # initial Chat Completions-to-Responses conversion.
     payload = _sanitize_responses_payload_for_send(
         payload,

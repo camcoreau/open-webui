@@ -297,7 +297,6 @@ class ResponsesPatchTests(unittest.TestCase):
                 {
                     'id': 'rs_1',
                     'type': 'reasoning',
-                    'status': 'completed',
                     'summary': [],
                     'content': [],
                     'encrypted_content': 'opaque-reasoning',
@@ -410,7 +409,7 @@ class ResponsesPatchTests(unittest.TestCase):
 
         expected_second_items = copy.deepcopy(second_items)
         for item in expected_second_items:
-            if item.get('type') in {'function_call', 'function_call_output'}:
+            if item.get('type') in {'reasoning', 'function_call', 'function_call_output'}:
                 item.pop('status', None)
 
         self.assertEqual(result['input'][1:], expected_second_items)
@@ -419,7 +418,7 @@ class ResponsesPatchTests(unittest.TestCase):
             ['rs_1'],
         )
 
-    def test_preserves_non_function_status_and_drops_replayed_function_status(self) -> None:
+    def test_preserves_message_status_and_drops_replay_only_status(self) -> None:
         def converted_output(item: dict) -> dict:
             result = self.converter(
                 {
@@ -470,12 +469,12 @@ class ResponsesPatchTests(unittest.TestCase):
         for item in items:
             converted = converted_output(item)
             self.assertEqual(converted['id'], item['id'])
-            if item['type'] in {'function_call', 'function_call_output'}:
+            if item['type'] in {'reasoning', 'function_call', 'function_call_output'}:
                 self.assertNotIn('status', converted)
             else:
                 self.assertEqual(converted['status'], 'completed')
 
-    def test_final_input_sanitizer_catches_function_items_at_any_position(self) -> None:
+    def test_final_input_sanitizer_catches_output_item_status_at_any_position(self) -> None:
         input_items = [
             {'id': 'rs_1', 'type': 'reasoning', 'status': 'completed'},
             {
@@ -499,7 +498,7 @@ class ResponsesPatchTests(unittest.TestCase):
 
         sanitized = self.sanitize_input_items(input_items)
 
-        self.assertEqual(sanitized[0]['status'], 'completed')
+        self.assertNotIn('status', sanitized[0])
         self.assertNotIn('status', sanitized[1])
         self.assertEqual(sanitized[1]['arguments'], {'status': 'requested'})
         self.assertNotIn('status', sanitized[2])
@@ -509,6 +508,11 @@ class ResponsesPatchTests(unittest.TestCase):
 
     def test_wire_boundary_recleans_exact_live_input_six_sequence(self) -> None:
         input_items = [
+            {
+                'type': 'message',
+                'role': 'developer',
+                'content': 'Follow CamCore operating policy.',
+            },
             {'type': 'message', 'role': 'user', 'content': 'First health check'},
             {
                 'id': 'fc_prior',
@@ -564,12 +568,12 @@ class ResponsesPatchTests(unittest.TestCase):
 
         self.assertIsNot(wire_payload, payload)
         self.assertEqual(payload, original)
-        for index in (1, 2, 6, 7):
+        self.assertEqual(serialized['input'][6]['type'], 'reasoning')
+        for index in (2, 3, 6, 7, 8):
             self.assertNotIn('status', serialized['input'][index])
-        self.assertEqual(serialized['input'][3]['status'], 'completed')
-        self.assertEqual(serialized['input'][5]['status'], 'completed')
-        self.assertEqual(serialized['input'][6]['arguments'], {'status': 'requested'})
-        self.assertEqual(serialized['input'][7]['output'], {'status': 'healthy'})
+        self.assertEqual(serialized['input'][4]['status'], 'completed')
+        self.assertEqual(serialized['input'][7]['arguments'], {'status': 'requested'})
+        self.assertEqual(serialized['input'][8]['output'], {'status': 'healthy'})
 
     def test_wire_boundary_leaves_chat_and_non_list_input_unchanged(self) -> None:
         chat_payload = {'model': 'gpt-5.6-luna', 'messages': []}
@@ -617,7 +621,7 @@ class ResponsesPatchTests(unittest.TestCase):
         self.assertEqual(sum(self.router_source.count(block) for block in managed_boundaries), 1)
         self.assertEqual(sum(self.router_source.count(block) for block in raw_boundaries), 1)
 
-    def test_historical_input_six_function_call_status_is_not_replayed(self) -> None:
+    def test_historical_reasoning_status_is_not_replayed(self) -> None:
         def stored_assistant(message_id: str, text: str) -> dict:
             return {
                 'role': 'assistant',
@@ -694,7 +698,7 @@ class ResponsesPatchTests(unittest.TestCase):
         self.assertEqual(result['input'][1]['status'], 'completed')
         self.assertEqual(result['input'][3]['status'], 'completed')
         self.assertEqual(result['input'][5]['type'], 'reasoning')
-        self.assertEqual(result['input'][5]['status'], 'completed')
+        self.assertNotIn('status', result['input'][5])
         self.assertEqual(result['input'][6]['type'], 'function_call')
         self.assertNotIn('status', result['input'][6])
         self.assertEqual(
