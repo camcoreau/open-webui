@@ -22,7 +22,7 @@ This public repository is the source of truth for CamCore's Open WebUI downstrea
 | Private service   | `https://ai.camcore.network`                                                                   |
 | Access            | CamCore LAN, authorised NetBird access or another explicitly approved private path             |
 | Authentication    | Microsoft Entra single sign-on with `CamCore.AI.User` and `CamCore.AI.Admin` application roles |
-| Inference         | Server-managed OpenAI Chat Completions connection                                              |
+| Inference         | Server-managed OpenAI Responses API connection with stateless replay                           |
 | Operations tools  | Separate, private and read-only CamCore Operations Gateway                                     |
 | Upstream          | [Open WebUI](https://github.com/open-webui/open-webui)                                         |
 | Production source | [`deploy/camcore/compose.yaml`](deploy/camcore/compose.yaml)                                   |
@@ -34,7 +34,7 @@ The table describes the repository contract. Confirm the live route, running ima
 The CamCore production profile deliberately narrows the much broader upstream Open WebUI feature set:
 
 - Microsoft Entra is the only sign-in path; local signup and password authentication are disabled.
-- OpenAI is the production inference provider through Chat Completions. Local Ollama inference is disabled.
+- OpenAI is the production inference provider through the stateless Responses API. Local Ollama inference is disabled.
 - CamCore Operations is supplied by the standalone `camcoreau/camcore-ai-gateway` service, not by the legacy OpenJarvis runtime.
 - The approved Operations surface is read-only and bounded. Modifying infrastructure actions require a separately designed confirmation and audit boundary before they can be enabled.
 - Production configuration is controlled by Git and the Portainer stack environment. Admin-panel changes are intentionally non-persistent.
@@ -44,7 +44,7 @@ This deployment is not an offline or fully local AI stack. Runtime downloads and
 
 Generic upstream `pip`, Docker and Ollama quick starts are useful for upstream evaluation, but they are not supported CamCore production instructions. Use the [CamCore deployment runbook](deploy/camcore/README.md) for the managed service and the [upstream documentation](https://docs.openwebui.com/) for general Open WebUI use.
 
-Responses mode is temporarily disabled after live acceptance rejected the previous migration. Do not re-enable it until ordinary streaming and the complete reasoning-plus-tool continuation have both passed live validation.
+Production uses OpenAI's Responses API in stateless mode (`ENABLE_RESPONSES_API_STATEFUL=false`). Releases must pass live acceptance for ordinary streaming, persisted reasoning-plus-tool continuations, sequential tools, reloads and controlled restarts before they are considered deployed.
 
 ## Production architecture
 
@@ -60,7 +60,7 @@ Nginx Proxy Manager on npm-backend
       |
       v
 Jarvis | CamCore AI
-      |-- HTTPS --> OpenAI Chat Completions API
+      |-- HTTPS --> OpenAI Responses API
       `-- HTTPS --> ai-tools.camcore.network --> CamCore Operations Gateway
 ```
 
