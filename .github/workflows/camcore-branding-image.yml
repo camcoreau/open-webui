@@ -182,6 +182,9 @@ jobs:
             /tmp/camcore-middleware.py
           grep -Fq "'input': _sanitize_responses_input_items(input_items)" \
             /tmp/camcore-openai.py
+          grep -Fq 'def _sanitize_responses_payload_for_send' /tmp/camcore-openai.py
+          grep -Fq 'is_responses=is_responses' /tmp/camcore-openai.py
+          grep -Fq 'is_responses=True' /tmp/camcore-openai.py
           export CAMCORE_OPENAI_SOURCE=/tmp/camcore-openai.py
           export CAMCORE_MIDDLEWARE_SOURCE=/tmp/camcore-middleware.py
           python deploy/camcore/branding/test_patch_openai_responses.py

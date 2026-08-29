@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import ast
 import copy
+import json
 import os
 import tempfile
 import unittest
@@ -64,6 +65,7 @@ class ResponsesPatchTests(unittest.TestCase):
                 '_normalize_stored_item',
                 '_normalize_stored_output',
                 '_sanitize_responses_input_items',
+                '_sanitize_responses_payload_for_send',
                 '_strip_camcore_responses_replay_for_chat',
                 'convert_to_responses_payload',
             },
@@ -75,6 +77,7 @@ class ResponsesPatchTests(unittest.TestCase):
         self.converter = router['convert_to_responses_payload']
         self.clean_chat_payload = router['_strip_camcore_responses_replay_for_chat']
         self.sanitize_input_items = router['_sanitize_responses_input_items']
+        self.sanitize_payload_for_send = router['_sanitize_responses_payload_for_send']
         self.attach_replay = middleware['_attach_camcore_responses_replay']
         self.function_call_linkage = middleware['_camcore_function_call_linkage']
 
@@ -504,6 +507,116 @@ class ResponsesPatchTests(unittest.TestCase):
         self.assertEqual(sanitized[3]['status'], 'completed')
         self.assertEqual(input_items, original)
 
+    def test_wire_boundary_recleans_exact_live_input_six_sequence(self) -> None:
+        input_items = [
+            {'type': 'message', 'role': 'user', 'content': 'First health check'},
+            {
+                'id': 'fc_prior',
+                'type': 'function_call',
+                'call_id': 'call_prior',
+                'name': 'get_camcore_health',
+                'arguments': {'status': 'requested'},
+                'status': 'completed',
+            },
+            {
+                'id': 'fco_prior',
+                'type': 'function_call_output',
+                'call_id': 'call_prior',
+                'output': {'status': 'healthy'},
+                'status': 'completed',
+            },
+            {
+                'id': 'msg_prior',
+                'type': 'message',
+                'role': 'assistant',
+                'content': [{'type': 'output_text', 'text': 'First result.'}],
+                'status': 'completed',
+            },
+            {'type': 'message', 'role': 'user', 'content': 'Second health check'},
+            {
+                'id': 'rs_current',
+                'type': 'reasoning',
+                'summary': [],
+                'encrypted_content': 'opaque-current-reasoning',
+                'status': 'completed',
+            },
+            {
+                'id': 'fc_current',
+                'type': 'function_call',
+                'call_id': 'call_current',
+                'name': 'get_camcore_health',
+                'arguments': {'status': 'requested'},
+                'status': 'completed',
+            },
+            {
+                'id': 'fco_current',
+                'type': 'function_call_output',
+                'call_id': 'call_current',
+                'output': {'status': 'healthy'},
+                'status': 'completed',
+            },
+        ]
+        payload = {'model': 'gpt-5.6-luna', 'input': input_items, 'stream': True}
+        original = copy.deepcopy(payload)
+
+        wire_payload = self.sanitize_payload_for_send(payload, is_responses=True)
+        serialized = json.loads(json.dumps(wire_payload))
+
+        self.assertIsNot(wire_payload, payload)
+        self.assertEqual(payload, original)
+        for index in (1, 2, 6, 7):
+            self.assertNotIn('status', serialized['input'][index])
+        self.assertEqual(serialized['input'][3]['status'], 'completed')
+        self.assertEqual(serialized['input'][5]['status'], 'completed')
+        self.assertEqual(serialized['input'][6]['arguments'], {'status': 'requested'})
+        self.assertEqual(serialized['input'][7]['output'], {'status': 'healthy'})
+
+    def test_wire_boundary_leaves_chat_and_non_list_input_unchanged(self) -> None:
+        chat_payload = {'model': 'gpt-5.6-luna', 'messages': []}
+        chat_payload_with_input = {
+            'model': 'gpt-5.6-luna',
+            'input': [{'type': 'function_call', 'status': 'completed'}],
+        }
+        string_input_payload = {'model': 'gpt-5.6-luna', 'input': 'Hello'}
+
+        self.assertIs(
+            self.sanitize_payload_for_send(chat_payload, is_responses=False),
+            chat_payload,
+        )
+        self.assertIs(
+            self.sanitize_payload_for_send(chat_payload_with_input, is_responses=False),
+            chat_payload_with_input,
+        )
+        self.assertEqual(chat_payload_with_input['input'][0]['status'], 'completed')
+        self.assertIs(
+            self.sanitize_payload_for_send(string_input_payload, is_responses=True),
+            string_input_payload,
+        )
+
+    def test_wire_boundary_is_adjacent_to_both_responses_serializers(self) -> None:
+        managed_prefix = """    payload = _sanitize_responses_payload_for_send(
+        payload,
+        is_responses=is_responses,
+    )
+"""
+        raw_prefix = """    payload = _sanitize_responses_payload_for_send(
+        payload,
+        is_responses=True,
+    )
+"""
+
+        managed_boundaries = [
+            f'{managed_prefix}    payload = {codec}.dumps(payload)\n'
+            for codec in ('json', 'JSONCodec')
+        ]
+        raw_boundaries = [
+            f'{raw_prefix}    body = {codec}.dumps(payload)\n'
+            for codec in ('json', 'JSONCodec')
+        ]
+
+        self.assertEqual(sum(self.router_source.count(block) for block in managed_boundaries), 1)
+        self.assertEqual(sum(self.router_source.count(block) for block in raw_boundaries), 1)
+
     def test_historical_input_six_function_call_status_is_not_replayed(self) -> None:
         def stored_assistant(message_id: str, text: str) -> dict:
             return {
@@ -860,6 +973,15 @@ class ResponsesPatchTests(unittest.TestCase):
 
         self.assertEqual(self.router_target.read_text(encoding='utf-8'), router_before)
         self.assertEqual(self.middleware_target.read_text(encoding='utf-8'), middleware_before)
+
+    def test_refuses_partial_raw_wire_boundary_drift(self) -> None:
+        source = self.router_target.read_text(encoding='utf-8')
+        self.assertEqual(source.count('        is_responses=True,\n'), 1)
+        source = source.replace('        is_responses=True,\n', '        is_responses = True,\n', 1)
+        self.router_target.write_text(source, encoding='utf-8')
+
+        with self.assertRaises(SystemExit):
+            patch(self.router_target, self.middleware_target)
 
     def test_refuses_unreviewed_router_drift(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
