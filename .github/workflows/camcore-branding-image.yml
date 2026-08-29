@@ -180,6 +180,8 @@ jobs:
           grep -Fq 'enabled=responses_stream_seen' /tmp/camcore-middleware.py
           grep -Fq 'tool_calls.append(responses_api_tool_calls)' \
             /tmp/camcore-middleware.py
+          grep -Fq "'input': _sanitize_responses_input_items(input_items)" \
+            /tmp/camcore-openai.py
           export CAMCORE_OPENAI_SOURCE=/tmp/camcore-openai.py
           export CAMCORE_MIDDLEWARE_SOURCE=/tmp/camcore-middleware.py
           python deploy/camcore/branding/test_patch_openai_responses.py
