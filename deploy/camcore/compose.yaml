@@ -2,7 +2,7 @@ name: camcore-open-webui
 
 services:
   open-webui:
-    image: ghcr.io/camcoreau/open-webui:camcore-8fb106b56285533d25199685e8bad36ea7f3a805@sha256:ffa5672aee68d7b838f4ae1c1c712bdb3e2eb797ea0e720f5dad7e9c099d4e97
+    image: ghcr.io/camcoreau/open-webui:camcore-4d85a50720f227d69c85dc6256fdbdc970ce138a@sha256:cfc5c4e4d63e8779d86d1cc56807555dc42b0d65217af0c6efbd209eaf30ff7d
     container_name: camcore-open-webui
     hostname: open-webui
     restart: unless-stopped
@@ -72,8 +72,7 @@ services:
       OPENAI_API_BASE_URL: "https://api.openai.com/v1"
       OPENAI_API_KEY: "${CAMCORE_AI_OPENAI_API_KEY:?CAMCORE_AI_OPENAI_API_KEY must be set}"
       OPENAI_API_CONFIGS: >-
-        {"0":{"enable":true,"tags":[],"prefix_id":"","model_ids":[],"connection_type":"external","api_type":"responses","auth_type":"bearer","passthrough_params":[]}}
-      ENABLE_RESPONSES_API_STATEFUL: "false"
+        {"0":{"enable":true,"tags":[],"prefix_id":"","model_ids":[],"connection_type":"external","auth_type":"bearer","passthrough_params":[]}}
       ENABLE_BASE_MODELS_CACHE: "false"
       ENABLE_OLLAMA_API: "false"
       ENABLE_FORWARD_USER_INFO_HEADERS: "false"
