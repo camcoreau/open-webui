@@ -7,9 +7,7 @@ production image reference in `deploy/camcore/compose.yaml`:
 
 For the 2026-08-28 Responses migration rollback, also remove
 `"api_type":"responses"` from `OPENAI_API_CONFIGS` so the predecessor uses its
-verified Chat Completions contract. Keep `ENABLE_RESPONSES_API_STATEFUL=false` (or
-remove the variable with the Responses configuration); never enable stateful
-Responses while using the verified predecessor.
+verified Chat Completions contract.
 
 Before redeploying, preserve a transaction-consistent backup of the persistent
 Open WebUI data volume. After redeploy, confirm the immutable image digest,
