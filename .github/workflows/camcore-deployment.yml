@@ -191,6 +191,9 @@ jobs:
           assert "enabled=responses_stream_seen" in responses_patcher
           assert "tool_calls.append(responses_api_tool_calls)" in responses_patcher
           assert "'input': _sanitize_responses_input_items(input_items)" in responses_patcher
+          assert "def _sanitize_responses_payload_for_send" in responses_patcher
+          assert "is_responses=is_responses" in responses_patcher
+          assert "is_responses=True" in responses_patcher
 
           runbook = Path("deploy/camcore/README.md").read_text()
           assert "CAMCORE_AI_OPENAI_API_KEY" in runbook

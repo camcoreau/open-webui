@@ -157,6 +157,17 @@ def _sanitize_responses_input_items(input_items: list) -> list:
     return sanitized_items
 
 
+def _sanitize_responses_payload_for_send(payload: dict, *, is_responses: bool) -> dict:
+    \"\"\"Enforce custom-function input compatibility at the wire boundary.\"\"\"
+    input_items = payload.get('input')
+    if not is_responses or not isinstance(input_items, list):
+        return payload
+
+    sanitized_payload = dict(payload)
+    sanitized_payload['input'] = _sanitize_responses_input_items(input_items)
+    return sanitized_payload
+
+
 def _strip_camcore_responses_replay_for_chat(payload: dict) -> dict:
     \"\"\"Remove internal replay fields while preserving Chat Completions messages.\"\"\"
     messages = payload.get('messages')
@@ -270,6 +281,88 @@ ROUTER_CHAT_REPLACEMENT = """    is_responses = api_config.get('api_type') == 'r
 
     if api_config.get('azure') or api_config.get('provider') == 'azure':
 """
+
+ROUTER_SEND_EXPECTED = """    is_streaming_request = bool(payload.get('stream', False))
+    if not is_streaming_request:
+        payload.pop('stream_options', None)
+
+    payload = json.dumps(payload)
+"""
+
+ROUTER_SEND_REPLACEMENT = """    is_streaming_request = bool(payload.get('stream', False))
+    if not is_streaming_request:
+        payload.pop('stream_options', None)
+
+    # Reapply the compatibility guard at the final transport boundary. This
+    # catches any status-bearing custom function item introduced after the
+    # initial Chat Completions-to-Responses conversion.
+    payload = _sanitize_responses_payload_for_send(
+        payload,
+        is_responses=is_responses,
+    )
+    payload = json.dumps(payload)
+"""
+
+ROUTER_SEND_CODEC_EXPECTED = """    is_streaming_request = bool(payload.get('stream', False))
+    if not is_streaming_request:
+        payload.pop('stream_options', None)
+
+    payload = JSONCodec.dumps(payload)
+"""
+
+ROUTER_SEND_CODEC_REPLACEMENT = """    is_streaming_request = bool(payload.get('stream', False))
+    if not is_streaming_request:
+        payload.pop('stream_options', None)
+
+    # Reapply the compatibility guard at the final transport boundary. This
+    # catches any status-bearing custom function item introduced after the
+    # initial Chat Completions-to-Responses conversion.
+    payload = _sanitize_responses_payload_for_send(
+        payload,
+        is_responses=is_responses,
+    )
+    payload = JSONCodec.dumps(payload)
+"""
+
+ROUTER_RAW_SEND_EXPECTED = """    # Enforce per-model access control
+    await check_model_access(user, await Models.get_model_by_id(model_id), BYPASS_MODEL_ACCESS_CONTROL)
+
+    body = json.dumps(payload)
+
+    if model_id:
+"""
+
+ROUTER_RAW_SEND_REPLACEMENT = """    # Enforce per-model access control
+    await check_model_access(user, await Models.get_model_by_id(model_id), BYPASS_MODEL_ACCESS_CONTROL)
+
+    payload = _sanitize_responses_payload_for_send(
+        payload,
+        is_responses=True,
+    )
+    body = json.dumps(payload)
+
+    if model_id:
+"""
+
+ROUTER_RAW_SEND_CODEC_EXPECTED = (
+    "    payload['model'] = strip_provider_model_prefix("
+    "payload['model'], api_config.get('prefix_id'))\n"
+    '    body = JSONCodec.dumps(payload)\n'
+    '\n'
+    '    r = None\n'
+)
+
+ROUTER_RAW_SEND_CODEC_REPLACEMENT = (
+    "    payload['model'] = strip_provider_model_prefix("
+    "payload['model'], api_config.get('prefix_id'))\n"
+    '    payload = _sanitize_responses_payload_for_send(\n'
+    '        payload,\n'
+    '        is_responses=True,\n'
+    '    )\n'
+    '    body = JSONCodec.dumps(payload)\n'
+    '\n'
+    '    r = None\n'
+)
 
 MIDDLEWARE_HELPER_EXPECTED = """def output_id(prefix: str) -> str:
     \"\"\"Generate OR-style ID: prefix + 24-char hex UUID.\"\"\"
@@ -473,6 +566,46 @@ def replace_guarded(source: str, expected: str, replacement: str, label: str, ta
     )
 
 
+def replace_guarded_variant(
+    source: str,
+    variants: tuple[tuple[str, str], ...],
+    label: str,
+    target: Path,
+) -> str:
+    """Replace exactly one supported upstream form while preserving drift guards."""
+    counts = [
+        (expected, replacement, source.count(expected), source.count(replacement))
+        for expected, replacement in variants
+    ]
+    unpatched = [entry for entry in counts if entry[2] == 1 and entry[3] == 0]
+    patched = [
+        entry
+        for entry in counts
+        if entry[3] == 1 and entry[2] == entry[1].count(entry[0])
+    ]
+
+    if len(unpatched) == 1 and sum(entry[2] for entry in counts) == 1 and not any(
+        entry[3] for entry in counts
+    ):
+        expected, replacement, _, _ = unpatched[0]
+        return source.replace(expected, replacement, 1)
+
+    if len(patched) == 1 and sum(entry[3] for entry in counts) == 1:
+        expected, replacement, expected_matches, _ = patched[0]
+        if sum(entry[2] for entry in counts) == replacement.count(expected) == expected_matches:
+            return source
+
+    found = ', '.join(
+        f'variant {index}: {expected_matches} unpatched/{replacement_matches} patched'
+        for index, (_, _, expected_matches, replacement_matches) in enumerate(counts, start=1)
+    )
+    raise SystemExit(
+        f'CamCore Responses patch refused to run: expected exactly one supported '
+        f'unpatched or patched {label} block in {target}; found {found}. '
+        f'Review the upstream release first.'
+    )
+
+
 def patch_router(target: Path) -> None:
     if not target.is_file():
         raise SystemExit(f'CamCore Responses router patch target is missing: {target}')
@@ -487,6 +620,25 @@ def patch_router(target: Path) -> None:
     ):
         source = replace_guarded(source, expected, replacement, label, target)
 
+    source = replace_guarded_variant(
+        source,
+        (
+            (ROUTER_SEND_EXPECTED, ROUTER_SEND_REPLACEMENT),
+            (ROUTER_SEND_CODEC_EXPECTED, ROUTER_SEND_CODEC_REPLACEMENT),
+        ),
+        'Responses transport boundary',
+        target,
+    )
+    source = replace_guarded_variant(
+        source,
+        (
+            (ROUTER_RAW_SEND_EXPECTED, ROUTER_RAW_SEND_REPLACEMENT),
+            (ROUTER_RAW_SEND_CODEC_EXPECTED, ROUTER_RAW_SEND_CODEC_REPLACEMENT),
+        ),
+        'raw Responses transport boundary',
+        target,
+    )
+
     required = (
         "responses_payload.pop('reasoning_effort', None)",
         "responses_payload['store'] = False",
@@ -497,6 +649,9 @@ def patch_router(target: Path) -> None:
         'latest_replay_index',
         "replay_action == 'skip'",
         "'input': _sanitize_responses_input_items(input_items)",
+        'def _sanitize_responses_payload_for_send',
+        'is_responses=is_responses',
+        'is_responses=True',
         '_strip_camcore_responses_replay_for_chat(payload)',
     )
     missing = [marker for marker in required if marker not in source]
