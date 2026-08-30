@@ -1,13 +1,14 @@
 name: Release to PyPI
 
+# Publishing is intentionally disabled in the CamCore fork unless the repository
+# variable CAMCORE_ENABLE_PYPI_PUBLISH is explicitly set to true and the PyPI
+# trusted-publisher identity is configured for this exact repository/workflow/environment.
 on:
-  push:
-    branches:
-      - main # or whatever branch you want to use
-      - pypi-release
+  workflow_dispatch:
 
 jobs:
   release:
+    if: ${{ vars.CAMCORE_ENABLE_PYPI_PUBLISH == 'true' }}
     runs-on: ubuntu-latest
     environment:
       name: pypi
