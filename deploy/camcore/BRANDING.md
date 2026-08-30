@@ -55,12 +55,12 @@ The approved CamCore identity assets are checked into deploy/camcore/branding/ a
 
 The build verifies each file's Git blob hash before continuing:
 
-| Asset | Git blob SHA |
-| --- | --- |
-| camcore-logo.png | 767a24df671bd80ef7bc4c3c1f8d9e4ad2574c27 |
-| favicon.png | 7b51b31e0f695de172c884b6aed631ba2019ca3e |
+| Asset                | Git blob SHA                             |
+| -------------------- | ---------------------------------------- |
+| camcore-logo.png     | 767a24df671bd80ef7bc4c3c1f8d9e4ad2574c27 |
+| favicon.png          | 7b51b31e0f695de172c884b6aed631ba2019ca3e |
 | apple-touch-icon.png | 82c7bc1f621cdd6a9b396840b7d1a9319d4908b2 |
-| icon-512.png | 0b5c9f8100659df93929db4629593f13347c28c6 |
+| icon-512.png         | 0b5c9f8100659df93929db4629593f13347c28c6 |
 
 A missing or unexpected asset causes the image build to fail. The running container has no external branding-asset dependency.
 
