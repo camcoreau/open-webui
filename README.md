@@ -1,3 +1,11 @@
+<!-- CAMCORE-REPOSITORY-BRANDING:START -->
+<p align="center">
+  <a href="https://camcore.au">
+    <img src=".github/brand/camcore-repository-banner.svg" alt="CamCore" width="520">
+  </a>
+</p>
+<!-- CAMCORE-REPOSITORY-BRANDING:END -->
+
 # Jarvis | CamCore AI
 
 [![Validate CamCore deployment](https://github.com/camcoreau/open-webui/actions/workflows/camcore-deployment.yml/badge.svg?branch=main)](https://github.com/camcoreau/open-webui/actions/workflows/camcore-deployment.yml)
