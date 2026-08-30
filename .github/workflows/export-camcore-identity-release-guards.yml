@@ -1,0 +1,74 @@
+name: Export validated Jarvis guardrail patch
+
+on:
+  push:
+    branches:
+      - fix/camcore-identity-and-release-guards
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    name: Apply, validate, and export patch
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out remediation branch
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Apply SHA-guarded approved patch
+        run: python scripts/apply_camcore_identity_release_guards.py .
+
+      - name: Render production Compose
+        env:
+          CAMCORE_AI_MICROSOFT_TENANT_ID: ci-tenant
+          CAMCORE_AI_MICROSOFT_CLIENT_ID: ci-client
+          CAMCORE_AI_MICROSOFT_CLIENT_SECRET: ci-client-secret
+          CAMCORE_AI_OPENAI_API_KEY: ci-openai-key
+          CAMCORE_AI_GATEWAY_API_KEY: ci-gateway-key
+          CAMCORE_AI_WEBUI_SECRET_KEY: ci-webui-secret-00000000000000000000000000000000
+          CAMCORE_AI_OAUTH_SESSION_TOKEN_ENCRYPTION_KEY: ci-session-secret-000000000000000000000000000000
+          CAMCORE_AI_OAUTH_CLIENT_INFO_ENCRYPTION_KEY: ci-client-info-secret-000000000000000000000000000
+          CAMCORE_AI_PROXY_TRUSTED_CIDR: 172.30.0.0/16
+        run: docker compose -f deploy/camcore/compose.yaml config --quiet
+
+      - name: Validate patch markers
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+
+          compose = Path('deploy/camcore/compose.yaml').read_text()
+          assert 'DEFAULT_INTERFACE_SETTINGS' in compose
+          settings_line = next(
+              line.strip()
+              for line in compose.splitlines()
+              if line.strip().startswith('{"system":')
+          )
+          system = json.loads(settings_line)['system']
+          assert 'Jayden Cameron' in system
+          assert 'does not own CamCore' in system
+          assert 'Declare RED only' in system
+
+          pypi = Path('.github/workflows/release-pypi.yml').read_text()
+          assert 'workflow_dispatch:' in pypi
+          assert 'CAMCORE_ENABLE_PYPI_PUBLISH' in pypi
+          assert 'branches:' not in pypi
+
+          docker = Path('.github/workflows/docker.yaml').read_text()
+          assert "vars.CAMCORE_ENABLE_HELM_NOTIFY == 'true'" in docker
+          assert "vars.CAMCORE_ENABLE_DOCKERHUB_PUBLISH == 'true'" in docker
+          assert docker.count('CAMCORE_ENABLE_HELM_NOTIFY') == 1
+          assert docker.count('CAMCORE_ENABLE_DOCKERHUB_PUBLISH') == 1
+
+      - name: Upload validated files
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: camcore-identity-release-guards
+          path: |
+            deploy/camcore/compose.yaml
+            .github/workflows/release-pypi.yml
+            .github/workflows/docker.yaml
+          if-no-files-found: error
+          retention-days: 1
