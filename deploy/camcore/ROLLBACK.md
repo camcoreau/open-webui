@@ -3,7 +3,7 @@
 If an Open WebUI production rollout fails validation, restore the last verified
 production image reference in `deploy/camcore/compose.yaml`:
 
-`ghcr.io/camcoreau/open-webui:camcore-4d85a50720f227d69c85dc6256fdbdc970ce138a@sha256:cfc5c4e4d63e8779d86d1cc56807555dc42b0d65217af0c6efbd209eaf30ff7d`
+`ghcr.io/camcoreau/open-webui:camcore-97bdadb845fd0f5c39a1c069b29bed8463f23787@sha256:d86d644c8864a82d99201d5a9b3f8c99c33d23d8c2531e5debf3a2d305a157d1`
 
 For the 2026-08-28 Responses migration rollback, also remove
 `"api_type":"responses"` from `OPENAI_API_CONFIGS` so the predecessor uses its
