@@ -49,7 +49,7 @@ jobs:
           import json
           from pathlib import Path
 
-          expected_image = "ghcr.io/camcoreau/open-webui:camcore-97bdadb845fd0f5c39a1c069b29bed8463f23787@sha256:d86d644c8864a82d99201d5a9b3f8c99c33d23d8c2531e5debf3a2d305a157d1"
+          expected_image = "ghcr.io/camcoreau/open-webui:camcore-a3a424d79ecc8f525215af19eb82c2097cad8b13@sha256:a956985f17f9794d35350a02c7cf6ee83d43b53ab45e2792b320e85ab21fe64b"
           rendered = json.loads(Path("/tmp/camcore-open-webui.json").read_text())
           assert set(rendered["services"]) == {"open-webui"}
           service = rendered["services"]["open-webui"]
