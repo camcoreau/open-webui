@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-"""Verify downloaded CamCore production assets before packaging them.
+"""Verify checked-in CamCore production assets before packaging them.
 
-Hashes are Git blob object IDs from camcoreau/camcore-websites at the source
-revision documented in BRANDING.md and the branding Dockerfile.
+Hashes are Git blob object IDs for the exact files copied by the branding Dockerfile.
 """
 
 from __future__ import annotations
@@ -14,10 +13,10 @@ from pathlib import Path
 STATIC_DIR = Path('/app/build/static')
 
 EXPECTED = {
-    STATIC_DIR / 'camcore-logo.png': '8e5f36f6b13021145449ff59cd95593650963921',
-    STATIC_DIR / 'favicon.png': '77b25f513e3bd501d6e2578b4c8bee73da0928e8',
-    STATIC_DIR / 'apple-touch-icon.png': '5ec9b1ea22bd45c50ff159a5b4046eba424f67b6',
-    STATIC_DIR / 'icon-512.png': '540a5b2a15dd3d9f830dd58555f6b653c12c5f29',
+    STATIC_DIR / 'camcore-logo.png': '767a24df671bd80ef7bc4c3c1f8d9e4ad2574c27',
+    STATIC_DIR / 'favicon.png': '7b51b31e0f695de172c884b6aed631ba2019ca3e',
+    STATIC_DIR / 'apple-touch-icon.png': '82c7bc1f621cdd6a9b396840b7d1a9319d4908b2',
+    STATIC_DIR / 'icon-512.png': '0b5c9f8100659df93929db4629593f13347c28c6',
 }
 
 

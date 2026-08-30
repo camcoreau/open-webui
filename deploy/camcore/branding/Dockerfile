@@ -17,14 +17,12 @@ COPY deploy/camcore/branding/patch_tool_servers.py /tmp/camcore-patch-tool-serve
 COPY deploy/camcore/branding/patch_openai_responses.py /tmp/camcore-patch-openai-responses.py
 COPY deploy/camcore/branding/verify_assets.py /tmp/camcore-verify-assets.py
 
-# Use the real production CamCore assets. They are downloaded only while the
-# immutable image is built; the running service has no dependency on camcore.au.
-# The Git blob hashes verified by verify_assets.py are pinned to
-# camcoreau/camcore-websites commit c652985eb0ada755c6a3940da5426d57c59b293a.
-ADD https://camcore.au/assets/camcore-logo.png /app/build/static/camcore-logo.png
-ADD https://camcore.au/assets/favicon.png /app/build/static/favicon.png
-ADD https://camcore.au/assets/apple-touch-icon.png /app/build/static/apple-touch-icon.png
-ADD https://camcore.au/assets/icon-512.png /app/build/static/icon-512.png
+# Use the exact approved CamCore assets checked into this repository. The
+# immutable image has no build-time or runtime dependency on camcore.au.
+COPY deploy/camcore/branding/camcore-logo.png /app/build/static/camcore-logo.png
+COPY deploy/camcore/branding/favicon.png /app/build/static/favicon.png
+COPY deploy/camcore/branding/apple-touch-icon.png /app/build/static/apple-touch-icon.png
+COPY deploy/camcore/branding/icon-512.png /app/build/static/icon-512.png
 
 RUN python /tmp/camcore-verify-assets.py \
     && rm -f /tmp/camcore-verify-assets.py
