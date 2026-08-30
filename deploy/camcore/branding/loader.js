@@ -1,6 +1,6 @@
 (() => {
 	const PRODUCT_NAME = 'Jarvis | CamCore AI';
-	const THEME_COLOR = '#071014';
+	const THEME_COLOR = '#101720';
 	const FAVICON_SVG = '/static/favicon.svg';
 	const FAVICON_PNG = '/static/favicon.png';
 	const TOUCH_ICON = '/static/apple-touch-icon.png';

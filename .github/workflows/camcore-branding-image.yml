@@ -54,16 +54,18 @@ jobs:
 
           grep -Fq "FROM ${UPSTREAM_IMAGE}" "$dockerfile"
           grep -Fq "$UPSTREAM_SOURCE_REVISION" "$dockerfile"
-          grep -Fq 'c652985eb0ada755c6a3940da5426d57c59b293a' "$dockerfile"
-          grep -Fq 'https://camcore.au/assets/camcore-logo.png' "$dockerfile"
+          grep -Fq 'COPY deploy/camcore/branding/camcore-logo.png' "$dockerfile"
+          grep -Fq 'COPY deploy/camcore/branding/favicon.png' "$dockerfile"
+          grep -Fq 'COPY deploy/camcore/branding/apple-touch-icon.png' "$dockerfile"
+          grep -Fq 'COPY deploy/camcore/branding/icon-512.png' "$dockerfile"
           grep -Fq 'camcore-patch-tool-servers.py' "$dockerfile"
           grep -Fq 'camcore-patch-openai-responses.py' "$dockerfile"
-          grep -Fq '8e5f36f6b13021145449ff59cd95593650963921' "$verifier"
-          grep -Fq '77b25f513e3bd501d6e2578b4c8bee73da0928e8' "$verifier"
-          grep -Fq '5ec9b1ea22bd45c50ff159a5b4046eba424f67b6' "$verifier"
-          grep -Fq '540a5b2a15dd3d9f830dd58555f6b653c12c5f29' "$verifier"
+          grep -Fq '767a24df671bd80ef7bc4c3c1f8d9e4ad2574c27' "$verifier"
+          grep -Fq '7b51b31e0f695de172c884b6aed631ba2019ca3e' "$verifier"
+          grep -Fq '82c7bc1f621cdd6a9b396840b7d1a9319d4908b2' "$verifier"
+          grep -Fq '0b5c9f8100659df93929db4629593f13347c28c6' "$verifier"
 
-          for path in "$css" "$loader" "$manifest" "$patcher" "$patcher_test" "$tool_patcher" "$responses_patcher" "$responses_test" "$verifier" deploy/camcore/branding/camcore-mark.svg; do
+          for path in "$css" "$loader" "$manifest" "$patcher" "$patcher_test" "$tool_patcher" "$responses_patcher" "$responses_test" "$verifier" deploy/camcore/branding/camcore-mark.svg deploy/camcore/branding/camcore-logo.png deploy/camcore/branding/favicon.png deploy/camcore/branding/apple-touch-icon.png deploy/camcore/branding/icon-512.png; do
             test -s "$path"
           done
 
@@ -83,7 +85,8 @@ jobs:
           grep -Fq "const MANIFEST = '/static/camcore-manifest.json'" "$loader"
           grep -Fq "localStorage.setItem('theme', 'dark')" "$loader"
           grep -Fq '"name": "Jarvis | CamCore AI"' "$manifest"
-          grep -Fq '"theme_color": "#071014"' "$manifest"
+          grep -Fq '"theme_color": "#101720"' "$manifest"
+          grep -Fq "const THEME_COLOR = '#101720'" "$loader"
 
           grep -Fq "Tools.get_tools_by_ids(tool_ids) if ENABLE_PLUGINS else {}" "$tool_patcher"
           grep -Fq "elif tool_id.startswith('server:') or ENABLE_PLUGINS:" "$tool_patcher"
@@ -216,8 +219,8 @@ jobs:
             org.opencontainers.image.description=CamCore product identity and visual layer for Open WebUI
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.source=https://github.com/camcoreau/open-webui
-            au.camcore.brand.source.repository=camcoreau/camcore-websites
-            au.camcore.brand.source.revision=c652985eb0ada755c6a3940da5426d57c59b293a
+            au.camcore.brand.source.repository=camcoreau/open-webui
+            au.camcore.brand.source.revision=${{ github.sha }}
           provenance: mode=max
           sbom: true
 

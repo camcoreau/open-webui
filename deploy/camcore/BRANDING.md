@@ -51,24 +51,18 @@ The application uses the same dark gradient, 64 px grid, restrained cyan/blue ra
 
 ## Production assets
 
-The real CamCore production identity assets remain source-controlled in `camcoreau/camcore-websites`.
+The approved CamCore identity assets are checked into deploy/camcore/branding/ and copied directly into the immutable image. This keeps the branding source reviewable and prevents the image build from depending on the deployment timing or availability of camcore.au.
 
-The branded image is pinned to CamCore website source revision:
+The build verifies each file's Git blob hash before continuing:
 
-```text
-c652985eb0ada755c6a3940da5426d57c59b293a
-```
+| Asset                | Git blob SHA                             |
+| -------------------- | ---------------------------------------- |
+| camcore-logo.png     | 767a24df671bd80ef7bc4c3c1f8d9e4ad2574c27 |
+| favicon.png          | 7b51b31e0f695de172c884b6aed631ba2019ca3e |
+| apple-touch-icon.png | 82c7bc1f621cdd6a9b396840b7d1a9319d4908b2 |
+| icon-512.png         | 0b5c9f8100659df93929db4629593f13347c28c6 |
 
-The Docker build downloads the public production copies from `camcore.au` **only during image construction** and verifies their Git blob hashes against that source revision before the build can continue:
-
-| Asset                  | Git blob SHA                               |
-| ---------------------- | ------------------------------------------ |
-| `camcore-logo.png`     | `8e5f36f6b13021145449ff59cd95593650963921` |
-| `favicon.png`          | `77b25f513e3bd501d6e2578b4c8bee73da0928e8` |
-| `apple-touch-icon.png` | `5ec9b1ea22bd45c50ff159a5b4046eba424f67b6` |
-| `icon-512.png`         | `540a5b2a15dd3d9f830dd58555f6b653c12c5f29` |
-
-A changed, unavailable or unexpected asset causes the image build to fail. The running Open WebUI container has no dependency on `camcore.au` for branding assets.
+A missing or unexpected asset causes the image build to fail. The running container has no external branding-asset dependency.
 
 ## Branding package
 
@@ -79,7 +73,7 @@ The visual package lives under `deploy/camcore/branding/`:
 - `camcore-manifest.json` gives installed/home-screen instances the `Jarvis | CamCore AI` name and CamCore application colours.
 - `patch_runtime.py` removes only Open WebUI v0.11.1's automatic custom-name suffix, preserves the surrounding upstream licence notices and points the runtime favicon setting to the bundled local CamCore favicon.
 - `test_patch_runtime.py` verifies that the guarded patch changes only the reviewed identity block and retains both upstream licence notices.
-- `camcore-mark.svg` remains as a lightweight local fallback/reference mark; the primary visible identity uses the verified production CamCore assets.
+- `camcore-mark.svg` is the scalable local connected-core wordmark; raster copies beside it supply browser, touch, and installed-app surfaces.
 - `Dockerfile` layers all branding over the exact approved Open WebUI v0.11.1 image digest.
 
 ## Experience contract
@@ -116,7 +110,7 @@ When Open WebUI is upgraded:
 2. confirm the CamCore deployment is still permitted to use full replacement branding;
 3. update the pinned upstream image digest in the branding Dockerfile;
 4. review `patch_runtime.py` against the new upstream identity implementation;
-5. re-pin and verify the current production CamCore asset revision and blob hashes;
+5. regenerate the checked-in CamCore assets and re-pin their verified blob hashes;
 6. build and validate the branding layer against the new version;
 7. inspect sign-in, sidebar, chat composer, markdown/code rendering, dialogs, PWA metadata and mobile layout;
 8. pin the new branded image digest in production only after those checks pass.
