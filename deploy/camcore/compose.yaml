@@ -2,7 +2,7 @@ name: camcore-open-webui
 
 services:
   open-webui:
-    image: ghcr.io/camcoreau/open-webui:camcore-a3a424d79ecc8f525215af19eb82c2097cad8b13@sha256:a956985f17f9794d35350a02c7cf6ee83d43b53ab45e2792b320e85ab21fe64b
+    image: ghcr.io/camcoreau/open-webui:camcore-1f312b93628d30861b00f7d448c28f8c32a73d9f@sha256:ec71ef7a0ca35cae7a4bf6848f544546c1c741c305474400fc67ccf1630774ac
     container_name: camcore-open-webui
     hostname: open-webui
     restart: unless-stopped
@@ -13,6 +13,9 @@ services:
       UVICORN_WORKERS: "1"
       WEBUI_URL: "https://ai.camcore.network"
       WEBUI_NAME: "Jarvis | CamCore AI"
+      # Australian English per the CamCore Brand Guidelines (s.18). en-GB is the
+      # available English locale matching the required Australian spelling conventions.
+      DEFAULT_LOCALE: "en-GB"
       WEBUI_AUTH: "true"
       WEBUI_SECRET_KEY: "${CAMCORE_AI_WEBUI_SECRET_KEY:?CAMCORE_AI_WEBUI_SECRET_KEY must be set}"
       OAUTH_SESSION_TOKEN_ENCRYPTION_KEY: "${CAMCORE_AI_OAUTH_SESSION_TOKEN_ENCRYPTION_KEY:?CAMCORE_AI_OAUTH_SESSION_TOKEN_ENCRYPTION_KEY must be set}"
