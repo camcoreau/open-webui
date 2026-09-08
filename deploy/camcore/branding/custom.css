@@ -1,5 +1,8 @@
 /* CamCore AI visual system.
-   Source of truth: camcoreau/camcore-websites production design tokens.
+   Source of truth: camcoreau/camcore-websites production design tokens
+   (CamCore Complete Brand Pack — Core Coral #ff4b2b on the Deep Core shell).
+   Retired cyan/blue values must not return here; the branding workflow
+   fails the build if they do (OPS-367).
    Product identity: Jarvis  |  CamCore AI.
 
    This layer deliberately keeps Open WebUI's application structure intact while
@@ -11,25 +14,26 @@ html.dark,
 html.her {
 	color-scheme: dark;
 
-	--camcore-ink: #f7fbff;
-	--camcore-ink-soft: #d9e8f2;
-	--camcore-muted: #9cb1c1;
-	--camcore-quiet: #708899;
-	--camcore-canvas: #030709;
-	--camcore-canvas-raised: #071014;
-	--camcore-surface: rgba(10, 22, 28, 0.88);
-	--camcore-surface-solid: #0b171d;
+	--camcore-ink: #f4f8fa;
+	--camcore-ink-soft: #d2c5c1;
+	--camcore-muted: #bca9a4;
+	--camcore-quiet: #a78d86;
+	--camcore-canvas: #02070a;
+	--camcore-canvas-raised: #040b10;
+	--camcore-surface: rgba(7, 19, 26, 0.88);
+	--camcore-surface-solid: #07131a;
 	--camcore-surface-soft: rgba(255, 255, 255, 0.038);
 	--camcore-surface-hover: rgba(255, 255, 255, 0.07);
-	--camcore-line: rgba(178, 218, 231, 0.14);
-	--camcore-line-strong: rgba(178, 218, 231, 0.28);
-	--camcore-cyan: #16d7e8;
-	--camcore-cyan-light: #98f4fb;
-	--camcore-blue: #4aa8ff;
+	--camcore-line: #4a2a24;
+	--camcore-line-strong: #8e4637;
+	--camcore-coral: #ff4b2b;
+	--camcore-coral-light: #ff7457;
+	--camcore-coral-soft: #ff9a7f;
+	--camcore-accent-ink: #001215;
 	--camcore-green: #5ee39c;
 	--camcore-amber: #ffc967;
 	--camcore-red: #ff8298;
-	--camcore-focus: #adf7ff;
+	--camcore-focus: #ffb09d;
 	--camcore-shadow-lg: 0 38px 110px rgba(0, 0, 0, 0.48);
 	--camcore-shadow-md: 0 20px 60px rgba(0, 0, 0, 0.34);
 	--camcore-radius-xl: 32px;
@@ -37,18 +41,18 @@ html.her {
 	--camcore-radius-md: 15px;
 
 	/* Re-map Open WebUI's neutral system into the CamCore palette. */
-	--color-gray-50: #f7fbff;
-	--color-gray-100: #edf7fb;
-	--color-gray-200: #d9e8f2;
-	--color-gray-300: #b8cedb;
-	--color-gray-400: #9cb1c1;
-	--color-gray-500: #708899;
-	--color-gray-600: #526a78;
+	--color-gray-50: #f4f8fa;
+	--color-gray-100: #ece7e5;
+	--color-gray-200: #d2c5c1;
+	--color-gray-300: #bca9a4;
+	--color-gray-400: #a78d86;
+	--color-gray-500: #8a746e;
+	--color-gray-600: #6b5852;
 	--color-gray-700: #243942;
 	--color-gray-800: #13252d;
-	--color-gray-850: #0b171d;
-	--color-gray-900: #071014;
-	--color-gray-950: #030709;
+	--color-gray-850: #07131a;
+	--color-gray-900: #040b10;
+	--color-gray-950: #02070a;
 }
 
 html,
@@ -68,9 +72,9 @@ body {
 		'Segoe UI',
 		sans-serif !important;
 	background-image:
-		radial-gradient(circle at 8% 0%, rgba(22, 215, 232, 0.13), transparent 32rem),
-		radial-gradient(circle at 90% 4%, rgba(74, 168, 255, 0.09), transparent 35rem),
-		linear-gradient(180deg, #030709 0%, #061015 54%, #030709 100%) !important;
+		radial-gradient(circle at 8% 0%, rgba(255, 75, 43, 0.13), transparent 32rem),
+		radial-gradient(circle at 90% 4%, rgba(255, 154, 127, 0.09), transparent 35rem),
+		linear-gradient(180deg, #02070a 0%, #040b10 54%, #02070a 100%) !important;
 	background-attachment: fixed !important;
 }
 
@@ -89,8 +93,8 @@ body::before {
 }
 
 ::selection {
-	color: #001014;
-	background: var(--camcore-cyan-light);
+	color: var(--camcore-accent-ink);
+	background: var(--camcore-coral-light);
 }
 
 :focus-visible {
@@ -125,7 +129,7 @@ select,
 .dark .dark\:bg-gray-900,
 .dark .dark\:bg-gray-850,
 .dark .dark\:bg-gray-800 {
-	background-color: rgba(7, 16, 20, 0.92) !important;
+	background-color: rgba(4, 11, 16, 0.92) !important;
 }
 
 [class*='border-gray-'] {
@@ -160,31 +164,31 @@ select,
 .bg-blue-500,
 .hover\:bg-blue-700:hover,
 .hover\:bg-blue-600:hover {
-	color: #001014 !important;
+	color: var(--camcore-accent-ink) !important;
 	background: linear-gradient(
 		135deg,
-		rgba(22, 215, 232, 0.98),
-		rgba(74, 168, 255, 0.94)
+		rgba(255, 75, 43, 0.98),
+		rgba(255, 154, 127, 0.94)
 	) !important;
-	box-shadow: 0 10px 30px rgba(22, 215, 232, 0.13);
+	box-shadow: 0 10px 30px rgba(255, 75, 43, 0.13);
 }
 
 .bg-blue-600:hover,
 .bg-blue-500:hover {
 	transform: translateY(-1px);
-	box-shadow: 0 14px 36px rgba(22, 215, 232, 0.2);
+	box-shadow: 0 14px 36px rgba(255, 75, 43, 0.2);
 }
 
 .text-blue-500,
 .text-blue-600,
 .text-blue-700,
 .dark .dark\:text-blue-400 {
-	color: var(--camcore-cyan-light) !important;
+	color: var(--camcore-coral-light) !important;
 }
 
 .border-blue-500,
 .border-blue-600 {
-	border-color: rgba(22, 215, 232, 0.62) !important;
+	border-color: rgba(255, 75, 43, 0.62) !important;
 }
 
 .bg-green-500 {
@@ -204,7 +208,7 @@ select,
 [contenteditable='true'] {
 	color: var(--camcore-ink) !important;
 	border-color: var(--camcore-line) !important;
-	background-color: rgba(11, 23, 29, 0.9) !important;
+	background-color: rgba(7, 19, 26, 0.9) !important;
 }
 
 input::placeholder,
@@ -215,12 +219,12 @@ textarea::placeholder,
 
 input[type='checkbox'],
 input[type='radio'] {
-	accent-color: var(--camcore-cyan);
+	accent-color: var(--camcore-coral);
 }
 
 /* Sidebar: compact operations-console treatment, exact CamCore identity asset. */
 #sidebar {
-	background: rgba(3, 10, 13, 0.88) !important;
+	background: rgba(2, 7, 10, 0.88) !important;
 	border-color: var(--camcore-line) !important;
 	box-shadow: 14px 0 42px rgba(0, 0, 0, 0.2);
 	backdrop-filter: blur(24px) saturate(135%);
@@ -232,7 +236,7 @@ input[type='radio'] {
 }
 
 #sidebar .sidebar {
-	background: linear-gradient(180deg, rgba(3, 10, 13, 0.98), rgba(3, 10, 13, 0.78)) !important;
+	background: linear-gradient(180deg, rgba(2, 7, 10, 0.98), rgba(2, 7, 10, 0.78)) !important;
 }
 
 #sidebar-webui-name {
@@ -245,7 +249,7 @@ input[type='radio'] {
 	content: 'PRIVATE AI WORKSPACE';
 	display: block;
 	margin-top: -1px;
-	color: var(--camcore-cyan-light);
+	color: var(--camcore-coral-light);
 	font-size: 8px;
 	font-weight: 800;
 	line-height: 1.15;
@@ -254,7 +258,7 @@ input[type='radio'] {
 
 #sidebar img.sidebar-new-chat-icon {
 	border-radius: 8px !important;
-	filter: drop-shadow(0 5px 12px rgba(22, 215, 232, 0.13));
+	filter: drop-shadow(0 5px 12px rgba(255, 75, 43, 0.13));
 }
 
 #sidebar-new-chat-button,
@@ -273,14 +277,14 @@ input[type='radio'] {
 .dark .dark\:hover\:bg-gray-850:hover,
 .dark .dark\:hover\:bg-gray-900:hover {
 	color: var(--camcore-ink) !important;
-	border-color: rgba(178, 218, 231, 0.1) !important;
+	border-color: rgba(142, 70, 55, 0.3) !important;
 	background: var(--camcore-surface-hover) !important;
 }
 
 #sidebar-chat-item[aria-current='page'],
 #sidebar-chat-item.active {
-	color: var(--camcore-cyan-light) !important;
-	background: linear-gradient(135deg, rgba(22, 215, 232, 0.1), rgba(74, 168, 255, 0.06)) !important;
+	color: var(--camcore-coral-light) !important;
+	background: linear-gradient(135deg, rgba(255, 75, 43, 0.1), rgba(255, 154, 127, 0.06)) !important;
 }
 
 /* Chat composer: raised CamCore command surface. */
@@ -295,7 +299,7 @@ body:not(:has(#auth-page)) form:has(#chat-input) [class*='rounded-'][class*='bor
 
 #chat-input {
 	color: var(--camcore-ink) !important;
-	caret-color: var(--camcore-cyan-light) !important;
+	caret-color: var(--camcore-coral-light) !important;
 }
 
 #chat-input:focus {
@@ -313,7 +317,7 @@ body:not(:has(#auth-page)) form:has(#chat-input)::before {
 	z-index: -1;
 	border: 1px solid var(--camcore-line);
 	border-radius: 26px;
-	background: rgba(7, 16, 20, 0.76);
+	background: rgba(4, 11, 16, 0.76);
 	box-shadow: 0 18px 52px rgba(0, 0, 0, 0.28);
 	backdrop-filter: blur(22px) saturate(130%);
 	pointer-events: none;
@@ -329,10 +333,10 @@ body:not(:has(#auth-page)) .m-auto.w-full.max-w-\[58rem\]::before {
 	display: inline-flex;
 	margin-bottom: 0.55rem;
 	padding: 0.38rem 0.66rem;
-	border: 1px solid rgba(22, 215, 232, 0.28);
+	border: 1px solid rgba(255, 75, 43, 0.28);
 	border-radius: 999px;
-	color: var(--camcore-cyan-light);
-	background: linear-gradient(135deg, rgba(22, 215, 232, 0.08), rgba(74, 168, 255, 0.05));
+	color: var(--camcore-coral-light);
+	background: linear-gradient(135deg, rgba(255, 75, 43, 0.08), rgba(255, 154, 127, 0.05));
 	font-size: 0.64rem;
 	font-weight: 820;
 	letter-spacing: 0.15em;
@@ -341,14 +345,14 @@ body:not(:has(#auth-page)) .m-auto.w-full.max-w-\[58rem\]::before {
 /* Markdown, code, tables and quoted material use CamCore documentation surfaces. */
 .markdown a,
 .prose a {
-	color: var(--camcore-cyan-light) !important;
-	text-decoration-color: rgba(22, 215, 232, 0.38) !important;
+	color: var(--camcore-coral-light) !important;
+	text-decoration-color: rgba(255, 75, 43, 0.38) !important;
 }
 
 .markdown a:hover,
 .prose a:hover {
-	color: #d8fcff !important;
-	text-decoration-color: var(--camcore-cyan-light) !important;
+	color: var(--camcore-focus) !important;
+	text-decoration-color: var(--camcore-coral-light) !important;
 }
 
 .markdown pre,
@@ -357,23 +361,23 @@ body:not(:has(#auth-page)) .m-auto.w-full.max-w-\[58rem\]::before {
 .prose table {
 	border: 1px solid var(--camcore-line) !important;
 	border-radius: var(--camcore-radius-md) !important;
-	background: rgba(3, 10, 13, 0.82) !important;
+	background: rgba(2, 7, 10, 0.82) !important;
 	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
 }
 
 .markdown code:not(pre code),
 .prose code:not(pre code) {
-	color: var(--camcore-cyan-light) !important;
-	border: 1px solid rgba(178, 218, 231, 0.11);
+	color: var(--camcore-coral-light) !important;
+	border: 1px solid rgba(142, 70, 55, 0.32);
 	border-radius: 6px;
-	background: rgba(22, 215, 232, 0.055) !important;
+	background: rgba(255, 75, 43, 0.055) !important;
 }
 
 .markdown blockquote,
 .prose blockquote {
 	color: var(--camcore-ink-soft) !important;
-	border-left-color: var(--camcore-cyan) !important;
-	background: rgba(22, 215, 232, 0.035);
+	border-left-color: var(--camcore-coral) !important;
+	background: rgba(255, 75, 43, 0.035);
 }
 
 .markdown hr,
@@ -388,7 +392,7 @@ body:not(:has(#auth-page)) .m-auto.w-full.max-w-\[58rem\]::before {
 [data-radix-popper-content-wrapper] > div {
 	color: var(--camcore-ink) !important;
 	border-color: var(--camcore-line) !important;
-	background: rgba(7, 16, 20, 0.97) !important;
+	background: rgba(4, 11, 16, 0.97) !important;
 	box-shadow: var(--camcore-shadow-md) !important;
 	backdrop-filter: blur(24px) saturate(135%);
 }
@@ -406,7 +410,7 @@ body:not(:has(#auth-page)) .m-auto.w-full.max-w-\[58rem\]::before {
 	color: var(--camcore-ink) !important;
 	border: 1px solid var(--camcore-line) !important;
 	border-radius: var(--camcore-radius-md) !important;
-	background: rgba(7, 16, 20, 0.96) !important;
+	background: rgba(4, 11, 16, 0.96) !important;
 	box-shadow: var(--camcore-shadow-md) !important;
 	backdrop-filter: blur(20px);
 }
@@ -415,9 +419,9 @@ body:not(:has(#auth-page)) .m-auto.w-full.max-w-\[58rem\]::before {
 #auth-page {
 	color: var(--camcore-ink) !important;
 	background:
-		radial-gradient(circle at 15% 8%, rgba(22, 215, 232, 0.17), transparent 30rem),
-		radial-gradient(circle at 88% 10%, rgba(74, 168, 255, 0.11), transparent 32rem),
-		linear-gradient(180deg, #030709 0%, #071014 58%, #030709 100%) !important;
+		radial-gradient(circle at 15% 8%, rgba(255, 75, 43, 0.17), transparent 30rem),
+		radial-gradient(circle at 88% 10%, rgba(255, 154, 127, 0.11), transparent 32rem),
+		linear-gradient(180deg, #02070a 0%, #040b10 58%, #02070a 100%) !important;
 }
 
 #auth-page > .absolute {
@@ -447,7 +451,7 @@ body:not(:has(#auth-page)) .m-auto.w-full.max-w-\[58rem\]::before {
 	padding: 34px 34px 30px !important;
 	border: 1px solid var(--camcore-line) !important;
 	border-radius: var(--camcore-radius-xl) !important;
-	background: rgba(7, 16, 20, 0.86) !important;
+	background: rgba(4, 11, 16, 0.86) !important;
 	box-shadow: var(--camcore-shadow-lg) !important;
 	backdrop-filter: blur(28px) saturate(135%);
 }
@@ -485,20 +489,20 @@ body:not(:has(#auth-page)) .m-auto.w-full.max-w-\[58rem\]::before {
 
 #auth-login-card button:hover {
 	color: var(--camcore-ink) !important;
-	border-color: rgba(22, 215, 232, 0.38) !important;
+	border-color: rgba(255, 75, 43, 0.38) !important;
 	background: linear-gradient(
 		135deg,
-		rgba(22, 215, 232, 0.11),
-		rgba(74, 168, 255, 0.07)
+		rgba(255, 75, 43, 0.11),
+		rgba(255, 154, 127, 0.07)
 	) !important;
 }
 
 /* Splash / startup: real CamCore production wordmark with Jarvis service identity. */
 #splash-screen {
 	background:
-		radial-gradient(circle at 14% 12%, rgba(22, 215, 232, 0.17), transparent 28rem),
-		radial-gradient(circle at 88% 10%, rgba(74, 168, 255, 0.1), transparent 30rem),
-		linear-gradient(180deg, #030709 0%, #071014 55%, #030709 100%) !important;
+		radial-gradient(circle at 14% 12%, rgba(255, 75, 43, 0.17), transparent 28rem),
+		radial-gradient(circle at 88% 10%, rgba(255, 154, 127, 0.1), transparent 30rem),
+		linear-gradient(180deg, #02070a 0%, #040b10 55%, #02070a 100%) !important;
 }
 
 #splash-screen::before {
@@ -549,16 +553,16 @@ body:not(:has(#auth-page)) .m-auto.w-full.max-w-\[58rem\]::before {
 	}
 }
 
-/* Scrollbars use the same muted-cyan material as CamCore.au. */
+/* Scrollbars use the same muted warm material as camcore.au. */
 ::-webkit-scrollbar-thumb,
 .dark ::-webkit-scrollbar-thumb {
-	background-color: rgba(112, 136, 153, 0.48) !important;
-	border-color: rgba(3, 7, 9, 0.82) !important;
+	background-color: rgba(167, 141, 134, 0.48) !important;
+	border-color: rgba(2, 7, 10, 0.82) !important;
 }
 
 ::-webkit-scrollbar-thumb:hover,
 .dark ::-webkit-scrollbar-thumb:hover {
-	background-color: rgba(22, 215, 232, 0.38) !important;
+	background-color: rgba(255, 75, 43, 0.38) !important;
 }
 
 @media (max-width: 640px) {

@@ -33,21 +33,28 @@ sha256:6bb1fbe8ab0a3e0456067f493044ffb66a30a65a34be47f6a5862176a370dd16
 The visual layer follows the production `camcore.au` design system rather than defining a separate AI theme. Core tokens include:
 
 ```text
-Canvas              #030709
-Raised canvas       #071014
-Surface             #0b171d
-Primary cyan        #16d7e8
-Cyan highlight      #98f4fb
-Secondary blue      #4aa8ff
+Canvas              #02070a
+Raised canvas       #040b10
+Surface             #07131a
+Core Coral          #ff4b2b   primary accent
+Coral highlight     #ff7457
+Coral soft          #ff9a7f   secondary accent
+Accent ink          #001215   text on coral fills
+Line                #4a2a24
+Line, strong        #8e4637
 Success             #5ee39c
 Warning             #ffc967
 Error               #ff8298
-Primary text        #f7fbff
-Muted text          #9cb1c1
-Focus                #adf7ff
+Primary text        #f4f8fa
+Soft text           #d2c5c1
+Muted text          #bca9a4
+Quiet text          #a78d86
+Focus               #ffb09d
 ```
 
-The application uses the same dark gradient, 64 px grid, restrained cyan/blue radial glow, raised glass surfaces, border language, focus treatment and radius scale as the public CamCore site.
+These are the production `camcore.au` tokens as at 8 September 2026 (CamCore Complete Brand Pack: Core Coral `#FF4B2B`, Deep Core `#101720`). The earlier cyan/blue generation (`#16d7e8`, `#98f4fb`, `#4aa8ff`, `#adf7ff`, canvas `#030709`/`#071014`) is retired; the branding workflow fails the build if any of those values reappear in `custom.css` (OPS-367). The neutral ramp values not published by the site (`#ece7e5`, `#8a746e`, `#6b5852`) are interpolated between published text tokens.
+
+The application uses the same dark gradient, 64 px grid, restrained coral radial glow, raised glass surfaces, border language, focus treatment and radius scale as the public CamCore site.
 
 ## Production assets
 
