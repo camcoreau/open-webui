@@ -69,10 +69,14 @@ jobs:
             test -s "$path"
           done
 
-          grep -Fq '#030709' "$css"
-          grep -Fq '#071014' "$css"
-          grep -Fq '#16d7e8' "$css"
-          grep -Fq '#4aa8ff' "$css"
+          # Approved CamCore palette (Core Coral on the Deep Core shell) — OPS-367.
+          grep -Fq '#02070a' "$css"
+          grep -Fq '#040b10' "$css"
+          grep -Fq '#ff4b2b' "$css"
+          grep -Fq '#ff7457' "$css"
+          grep -Fq '#ffb09d' "$css"
+          # Retired cyan/blue generation must never return.
+          ! grep -Eiq '#16d7e8|#98f4fb|#4aa8ff|#adf7ff|#030709|#071014|rgba\(22, 215, 232|rgba\(74, 168, 255' "$css"
           grep -Fq '#auth-login-card' "$css"
           grep -Fq '#sidebar-webui-name' "$css"
           grep -Fq '#chat-input' "$css"
