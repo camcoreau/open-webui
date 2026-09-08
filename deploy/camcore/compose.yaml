@@ -13,8 +13,8 @@ services:
       UVICORN_WORKERS: "1"
       WEBUI_URL: "https://ai.camcore.network"
       WEBUI_NAME: "Jarvis | CamCore AI"
-      # Australian English per the CamCore Brand Guidelines (s.18). Open WebUI ships
-      # en-GB and en-US only; en-GB carries the matching spellings.
+      # Australian English per the CamCore Brand Guidelines (s.18). en-GB is the
+      # available English locale matching the required Australian spelling conventions.
       DEFAULT_LOCALE: "en-GB"
       WEBUI_AUTH: "true"
       WEBUI_SECRET_KEY: "${CAMCORE_AI_WEBUI_SECRET_KEY:?CAMCORE_AI_WEBUI_SECRET_KEY must be set}"
