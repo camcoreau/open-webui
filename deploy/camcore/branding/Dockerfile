@@ -24,8 +24,13 @@ COPY deploy/camcore/branding/favicon.png /app/build/static/favicon.png
 COPY deploy/camcore/branding/apple-touch-icon.png /app/build/static/apple-touch-icon.png
 COPY deploy/camcore/branding/icon-512.png /app/build/static/icon-512.png
 
+# verify_assets.py also derives favicon.svg, favicon-96x96.png and favicon.ico
+# from the verified CamCore favicon.png, so every icon path the stock app shell
+# requests before loader.js runs already serves the CamCore mark. The upstream
+# Open WebUI favicon.ico (sha256 cf00f7de…) must not survive the build (OPS-430).
 RUN python /tmp/camcore-verify-assets.py \
-    && rm -f /tmp/camcore-verify-assets.py
+    && rm -f /tmp/camcore-verify-assets.py \
+    && ! sha256sum /app/build/static/favicon.ico | grep -q cf00f7de3ac614f87e58450cf7b832dcb3b1e0cf2ef562c1b4e71cc7b987f408
 
 # Open WebUI v0.11 appends "(Open WebUI)" to every custom WEBUI_NAME. CamCore's
 # <=50-user branding exception permits replacing that deployed product branding.
@@ -86,6 +91,7 @@ RUN test -s /app/build/static/custom.css \
     && test -s /app/build/static/favicon.png \
     && test -s /app/build/static/favicon-96x96.png \
     && test -s /app/build/static/favicon.svg \
+    && test -s /app/build/static/favicon.ico \
     && test -s /app/build/static/apple-touch-icon.png \
     && test -s /app/build/static/icon-512.png \
     && test -s /app/build/static/camcore-manifest.json

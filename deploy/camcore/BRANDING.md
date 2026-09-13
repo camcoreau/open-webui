@@ -71,6 +71,12 @@ The build verifies each file's Git blob hash before continuing:
 
 A missing or unexpected asset causes the image build to fail. The running container has no external branding-asset dependency.
 
+### Derived browser icons
+
+Open WebUI v0.11.1's `app.html` links four icon paths in the initial HTML — `/static/favicon.png`, `/static/favicon-96x96.png`, `/static/favicon.svg` and `/static/favicon.ico` (shortcut icon) — before `loader.js` runs and repoints them. So that none of those requests can ever return an upstream Open WebUI icon, `verify_assets.py` derives the other three from the verified `favicon.png` at image build time: `favicon.svg` (the PNG wrapped in an SVG `<image>`), `favicon-96x96.png` (a byte copy) and `favicon.ico` (a single-entry ICO container holding the PNG verbatim). The build fails if the upstream `favicon.ico` (sha256 `cf00f7de3ac614f87e58450cf7b832dcb3b1e0cf2ef562c1b4e71cc7b987f408`) is still what would be served (OPS-430).
+
+The 64 px `favicon.png` is an opaque Deep Core tile carrying the white and Core Coral mark, so it reads the same on light and dark browser chrome. Open WebUI v0.11.1 does not reference a `favicon-dark.png` anywhere (`app.html`, `+layout.svelte`, upstream `static/`), and none is shipped; a `404` for that path is a probe of an unused name, not a gap (OPS-430).
+
 ## Branding package
 
 The visual package lives under `deploy/camcore/branding/`:
@@ -88,7 +94,7 @@ The visual package lives under `deploy/camcore/branding/`:
 A branded release is acceptable only when all of the following are true:
 
 1. browser title and installed-app name show `Jarvis | CamCore AI`;
-2. favicon, touch icon, sidebar mark, auth fallback and splash use CamCore identity assets;
+2. favicon (`.png`, `.svg`, `.ico` and the 96 px PNG), touch icon, sidebar mark, auth fallback and splash use CamCore identity assets;
 3. the app remains a managed dark experience matching the production CamCore palette;
 4. sidebar, composer, dialogs, menus, toasts, markdown, code and responsive layouts remain legible and usable;
 5. keyboard focus remains clearly visible and reduced-motion preferences are respected;

@@ -64,6 +64,14 @@ jobs:
           grep -Fq '7b51b31e0f695de172c884b6aed631ba2019ca3e' "$verifier"
           grep -Fq '82c7bc1f621cdd6a9b396840b7d1a9319d4908b2' "$verifier"
           grep -Fq '0b5c9f8100659df93929db4629593f13347c28c6' "$verifier"
+          # Every icon path the stock shell requests is derived from the verified
+          # CamCore favicon.png; the upstream favicon.ico must not survive — OPS-430.
+          grep -Fq "STATIC_DIR / 'favicon.svg'" "$verifier"
+          grep -Fq "STATIC_DIR / 'favicon-96x96.png'" "$verifier"
+          grep -Fq "STATIC_DIR / 'favicon.ico'" "$verifier"
+          grep -Fq 'cf00f7de3ac614f87e58450cf7b832dcb3b1e0cf2ef562c1b4e71cc7b987f408' "$verifier"
+          grep -Fq 'cf00f7de3ac614f87e58450cf7b832dcb3b1e0cf2ef562c1b4e71cc7b987f408' "$dockerfile"
+          grep -Fq 'test -s /app/build/static/favicon.ico' "$dockerfile"
 
           for path in "$css" "$loader" "$manifest" "$patcher" "$patcher_test" "$tool_patcher" "$responses_patcher" "$responses_test" "$verifier" deploy/camcore/branding/camcore-mark.svg deploy/camcore/branding/camcore-logo.png deploy/camcore/branding/favicon.png deploy/camcore/branding/apple-touch-icon.png deploy/camcore/branding/icon-512.png; do
             test -s "$path"
