@@ -610,13 +610,9 @@ class ResponsesPatchTests(unittest.TestCase):
 """
 
         managed_boundaries = [
-            f'{managed_prefix}    payload = {codec}.dumps(payload)\n'
-            for codec in ('json', 'JSONCodec')
+            f'{managed_prefix}    payload = {codec}.dumps(payload)\n' for codec in ('json', 'JSONCodec')
         ]
-        raw_boundaries = [
-            f'{raw_prefix}    body = {codec}.dumps(payload)\n'
-            for codec in ('json', 'JSONCodec')
-        ]
+        raw_boundaries = [f'{raw_prefix}    body = {codec}.dumps(payload)\n' for codec in ('json', 'JSONCodec')]
 
         self.assertEqual(sum(self.router_source.count(block) for block in managed_boundaries), 1)
         self.assertEqual(sum(self.router_source.count(block) for block in raw_boundaries), 1)

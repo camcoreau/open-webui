@@ -84,8 +84,7 @@ def main() -> None:
         actual_sha = git_blob_sha(data)
         if actual_sha != expected_sha:
             raise SystemExit(
-                f'CamCore production asset verification failed for {path}: '
-                f'expected {expected_sha}, got {actual_sha}'
+                f'CamCore production asset verification failed for {path}: expected {expected_sha}, got {actual_sha}'
             )
 
     favicon = (STATIC_DIR / 'favicon.png').read_bytes()

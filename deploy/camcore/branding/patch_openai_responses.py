@@ -576,19 +576,12 @@ def replace_guarded_variant(
 ) -> str:
     """Replace exactly one supported upstream form while preserving drift guards."""
     counts = [
-        (expected, replacement, source.count(expected), source.count(replacement))
-        for expected, replacement in variants
+        (expected, replacement, source.count(expected), source.count(replacement)) for expected, replacement in variants
     ]
     unpatched = [entry for entry in counts if entry[2] == 1 and entry[3] == 0]
-    patched = [
-        entry
-        for entry in counts
-        if entry[3] == 1 and entry[2] == entry[1].count(entry[0])
-    ]
+    patched = [entry for entry in counts if entry[3] == 1 and entry[2] == entry[1].count(entry[0])]
 
-    if len(unpatched) == 1 and sum(entry[2] for entry in counts) == 1 and not any(
-        entry[3] for entry in counts
-    ):
+    if len(unpatched) == 1 and sum(entry[2] for entry in counts) == 1 and not any(entry[3] for entry in counts):
         expected, replacement, _, _ = unpatched[0]
         return source.replace(expected, replacement, 1)
 

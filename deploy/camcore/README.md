@@ -7,10 +7,12 @@ from the CamCore LAN or an approved private network path such as NetBird.
 
 The production image is immutable and contains the reviewed CamCore visual overlay
 and stateless Responses compatibility layer on top of the exact approved Open
-WebUI v0.11.1 runtime:
+WebUI v0.11.1 runtime. `DEPLOYMENT-STATUS.md` records the verified deployment
+and the rollback point, and the deployment contract workflow fails if this file,
+`DEPLOYMENT-STATUS.md`, `ROLLBACK.md` and `compose.yaml` name different images:
 
 ```text
-ghcr.io/camcoreau/open-webui:camcore-97bdadb845fd0f5c39a1c069b29bed8463f23787@sha256:d86d644c8864a82d99201d5a9b3f8c99c33d23d8c2531e5debf3a2d305a157d1
+ghcr.io/camcoreau/open-webui:camcore-5c31191973557c9ccb94eb0a211ef004eae572ae@sha256:a8cdb5270ce03cd7abfa27030eedff90bbdfc4ebaef2320a5cb0c8553c059330
 ```
 
 The service publishes no host port. Nginx Proxy Manager reaches Open WebUI over
