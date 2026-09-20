@@ -15,6 +15,10 @@ concurrency:
 jobs:
   # ── Create release and trigger downstream workflows ──────────────────────
   publish:
+    # The CamCore fork does not publish upstream-versioned GitHub releases or
+    # dispatch the upstream image build. Set the repository variable
+    # CAMCORE_ENABLE_UPSTREAM_RELEASE to true to re-enable this job.
+    if: ${{ vars.CAMCORE_ENABLE_UPSTREAM_RELEASE == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

@@ -158,6 +158,8 @@ Before an upstream upgrade:
 5. rebuild and validate the CamCore image; and
 6. promote the new digest only through a separate reviewed deployment change.
 
+Upstream publishing automation stays inert in this fork. The upstream image matrix (`docker.yaml`), the GitHub release (`release.yml`), the Docker Hub copy, the Helm chart notification and PyPI publishing each run only when the matching `CAMCORE_ENABLE_*` repository variable is set to `true`. Production images come solely from the CamCore branding workflow.
+
 General Open WebUI documentation, feature requests and upstream product issues belong with the [upstream project](https://github.com/open-webui/open-webui). CamCore deployment, branding and operational matters belong with CamCore.
 
 ## Support and security reporting
