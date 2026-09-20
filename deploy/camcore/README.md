@@ -12,7 +12,7 @@ and the rollback point, and the deployment contract workflow fails if this file,
 `DEPLOYMENT-STATUS.md`, `ROLLBACK.md` and `compose.yaml` name different images:
 
 ```text
-ghcr.io/camcoreau/open-webui:camcore-5c31191973557c9ccb94eb0a211ef004eae572ae@sha256:a8cdb5270ce03cd7abfa27030eedff90bbdfc4ebaef2320a5cb0c8553c059330
+ghcr.io/camcoreau/open-webui:camcore-7639dc5896eaa56f011ea069ec425af7e0950f45@sha256:4b28ff432592d7340557acdd000ae86e756a58cbb00978498453b928183d1aba
 ```
 
 The service publishes no host port. Nginx Proxy Manager reaches Open WebUI over
