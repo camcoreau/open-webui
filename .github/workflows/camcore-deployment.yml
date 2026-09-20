@@ -175,6 +175,7 @@ jobs:
               branding / "patch_openai_responses.py",
               branding / "test_patch_openai_responses.py",
               branding / "patch_tool_servers.py",
+              branding / "test_patch_tool_servers.py",
           ):
               assert path.is_file() and path.stat().st_size > 0, f"missing CamCore asset: {path}"
 

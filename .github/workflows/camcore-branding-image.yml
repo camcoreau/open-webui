@@ -48,6 +48,7 @@ jobs:
           patcher=deploy/camcore/branding/patch_runtime.py
           patcher_test=deploy/camcore/branding/test_patch_runtime.py
           tool_patcher=deploy/camcore/branding/patch_tool_servers.py
+          tool_patcher_test=deploy/camcore/branding/test_patch_tool_servers.py
           responses_patcher=deploy/camcore/branding/patch_openai_responses.py
           responses_test=deploy/camcore/branding/test_patch_openai_responses.py
           verifier=deploy/camcore/branding/verify_assets.py
@@ -73,7 +74,7 @@ jobs:
           grep -Fq 'cf00f7de3ac614f87e58450cf7b832dcb3b1e0cf2ef562c1b4e71cc7b987f408' "$dockerfile"
           grep -Fq 'test -s /app/build/static/favicon.ico' "$dockerfile"
 
-          for path in "$css" "$loader" "$manifest" "$patcher" "$patcher_test" "$tool_patcher" "$responses_patcher" "$responses_test" "$verifier" deploy/camcore/branding/camcore-mark.svg deploy/camcore/branding/camcore-logo.png deploy/camcore/branding/favicon.png deploy/camcore/branding/apple-touch-icon.png deploy/camcore/branding/icon-512.png; do
+          for path in "$css" "$loader" "$manifest" "$patcher" "$patcher_test" "$tool_patcher" "$tool_patcher_test" "$responses_patcher" "$responses_test" "$verifier" deploy/camcore/branding/camcore-mark.svg deploy/camcore/branding/camcore-logo.png deploy/camcore/branding/favicon.png deploy/camcore/branding/apple-touch-icon.png deploy/camcore/branding/icon-512.png; do
             test -s "$path"
           done
 
@@ -172,6 +173,9 @@ jobs:
           python -m py_compile /tmp/camcore-tools.py /tmp/camcore-middleware.py
           grep -Fq "Tools.get_tools_by_ids(tool_ids) if ENABLE_PLUGINS else {}" /tmp/camcore-tools.py
           grep -Fq "elif tool_id.startswith('server:') or ENABLE_PLUGINS:" /tmp/camcore-middleware.py
+          CAMCORE_TOOLS_SOURCE="$RUNNER_TEMP/camcore-upstream/utils/tools.py" \
+          CAMCORE_MIDDLEWARE_SOURCE="$RUNNER_TEMP/camcore-upstream/utils/middleware.py" \
+            python deploy/camcore/branding/test_patch_tool_servers.py
 
       - name: Verify guarded OpenAI Responses patch
         shell: bash
