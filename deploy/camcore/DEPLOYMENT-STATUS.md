@@ -1,16 +1,17 @@
 # Deployment status
 
-Production deployment verified on 2026-09-13 (OPS-430).
+Production pin updated on 2026-09-20; the host redeploy and runtime verification
+are pending. This file records the pin at merge time so the deployment contract
+check keeps `compose.yaml`, `README.md`, `ROLLBACK.md` and this file in
+agreement, and it is updated again once the host redeploy is verified.
 
 Immutable image:
-`ghcr.io/camcoreau/open-webui:camcore-5c31191973557c9ccb94eb0a211ef004eae572ae@sha256:a8cdb5270ce03cd7abfa27030eedff90bbdfc4ebaef2320a5cb0c8553c059330`
+`ghcr.io/camcoreau/open-webui:camcore-7639dc5896eaa56f011ea069ec425af7e0950f45@sha256:4b28ff432592d7340557acdd000ae86e756a58cbb00978498453b928183d1aba`
 
-- Source image build: successful from revision `5c31191973557c9ccb94eb0a211ef004eae572ae` (source change PR #39 — `verify_assets.py` derives `favicon.ico` from the verified CamCore `favicon.png` at image build and fails if the upstream Open WebUI `.ico` would still be served; Dockerfile and workflow guards; `BRANDING.md` "Derived browser icons").
-- Production compose pin: merged to `main` at `736e3ac` (PR #40). No environment, network, volume or health-check change; `DEFAULT_LOCALE=en-GB` and the Entra-only guardrail carried forward unchanged.
-- Host redeploy: complete through the Git-backed Portainer stack `camcore-open-webui` in environment `7`, stack `67`, at 16:55 AEST (re-pull image and redeploy; stack settings unchanged — reference `refs/heads/main`, git authentication off since OPS-367 because the repository is public; restore a token on the stack if the repository is ever made private).
-- Runtime verification: container recreated 2026-09-13 16:55:34 AEST, `healthy` after the start period, restart count 0; `/api/config` reports `name = "Jarvis | CamCore AI"`, `version = "0.11.1"`, `default_locale = "en-GB"`; the root URL still auto-redirects to Microsoft Entra.
-- Branding verification: `/static/favicon.ico` now served at 3 329 bytes, sha256 `f4a6d68472cc08e7…` (the CamCore mark; previously the upstream Open WebUI icon at 4 286 bytes, sha256 `cf00f7de…`), `content-type: image/vnd.microsoft.icon`, decodes as a 64×64 image. Unchanged: `/static/custom.css` sha256 `02b7a77a5be4e78c2a807e59d5fa833e1df03ed92ea096809c9cf74e861f1308` (15 302 bytes), `favicon.png` and `favicon-96x96.png` (3 307 bytes), `favicon.svg` (4 539 bytes), `apple-touch-icon.png`, `logo.png`, splash assets and the PWA manifest — all HTTP 200.
+- Source image build: successful from revision `7639dc5896eaa56f011ea069ec425af7e0950f45` (branding workflow run `35509266063`; source changes PR #42 and PR #43 — `patch_openai_responses.py` no longer replays stored reasoning items that lack `encrypted_content` into stateless Responses requests; `test_patch_tool_servers.py` exercises the OpenAPI tool-server patch against the pinned v0.11.1 fixtures; Dockerfile and workflow guards for both; the `0468f881` release notes retired). The visual layer, identity patch, assets and upstream v0.11.1 base are unchanged from the previous image.
+- Production compose pin: this change. No environment, network, volume or health-check change.
+- Host redeploy: pending — pull and redeploy the Git-backed Portainer stack `camcore-open-webui` in environment `7`, stack `67`, with stack settings unchanged.
+- Runtime verification: pending — container `healthy` after the start period with restart count 0; `/api/config` reports `name = "Jarvis | CamCore AI"`, `version = "0.11.1"` and `default_locale = "en-GB"`; the root URL auto-redirects to Microsoft Entra; a basic chat and one CamCore Operations call complete; a chat recorded before 2026-08-29 that carries reasoning continues without a provider rejection.
 - Protected contract: Microsoft Entra-only authentication, the private `npm-backend` network, the persistent data volume, and no published host ports remain unchanged.
-- `/static/favicon-dark.png` is not referenced by Open WebUI v0.11.1 or by the CamCore layer and is intentionally not shipped; a 404 for that path is a probe of an unused name, not a gap (OPS-430, `BRANDING.md`).
 
-Previous verified deployment (rollback point): `ghcr.io/camcoreau/open-webui:camcore-1f312b93628d30861b00f7d448c28f8c32a73d9f@sha256:ec71ef7a0ca35cae7a4bf6848f544546c1c741c305474400fc67ccf1630774ac` (verified 2026-09-08, OPS-367) — revert `736e3ac` on `main` and pull-and-redeploy stack 67 to restore it.
+Previous verified deployment (rollback point): `ghcr.io/camcoreau/open-webui:camcore-5c31191973557c9ccb94eb0a211ef004eae572ae@sha256:a8cdb5270ce03cd7abfa27030eedff90bbdfc4ebaef2320a5cb0c8553c059330` (verified 2026-09-13, OPS-430) — revert this compose pin commit on `main` and pull-and-redeploy stack 67 to restore it.

@@ -6,16 +6,18 @@ this file must name the same image. The deployment contract workflow fails if
 this file, `DEPLOYMENT-STATUS.md`, `README.md` and `compose.yaml` disagree, or
 if this file names the image that is currently pinned.
 
-Rollback image (verified 2026-09-08, OPS-367):
+Rollback image (verified 2026-09-13, OPS-430):
 
-`ghcr.io/camcoreau/open-webui:camcore-1f312b93628d30861b00f7d448c28f8c32a73d9f@sha256:ec71ef7a0ca35cae7a4bf6848f544546c1c741c305474400fc67ccf1630774ac`
+`ghcr.io/camcoreau/open-webui:camcore-5c31191973557c9ccb94eb0a211ef004eae572ae@sha256:a8cdb5270ce03cd7abfa27030eedff90bbdfc4ebaef2320a5cb0c8553c059330`
 
-The rollback image differs from the current image only in the derived
-`favicon.ico` (OPS-430). It carries the same Core Coral branding and the same
-guarded identity, OpenAPI tool-server and stateless Responses patches, and it
-runs against the same `compose.yaml` environment, network, volume and health
-check. Keep `OPENAI_API_CONFIGS` and `ENABLE_RESPONSES_API_STATEFUL=false`
-unchanged when rolling back to it.
+The rollback image differs from the current image only in the runtime patch
+layer: it still replays stored reasoning items that lack `encrypted_content`
+into stateless Responses requests, and its build predates the tool-server
+behaviour test. It carries the same Core Coral branding, the same identity
+patch and assets, the same upstream v0.11.1 base, and it runs against the same
+`compose.yaml` environment, network, volume and health check. Keep
+`OPENAI_API_CONFIGS` and `ENABLE_RESPONSES_API_STATEFUL=false` unchanged when
+rolling back to it.
 
 ## Procedure
 

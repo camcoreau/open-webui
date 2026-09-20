@@ -50,7 +50,7 @@ jobs:
           import re
           from pathlib import Path
 
-          expected_image = "ghcr.io/camcoreau/open-webui:camcore-5c31191973557c9ccb94eb0a211ef004eae572ae@sha256:a8cdb5270ce03cd7abfa27030eedff90bbdfc4ebaef2320a5cb0c8553c059330"
+          expected_image = "ghcr.io/camcoreau/open-webui:camcore-7639dc5896eaa56f011ea069ec425af7e0950f45@sha256:4b28ff432592d7340557acdd000ae86e756a58cbb00978498453b928183d1aba"
           rendered = json.loads(Path("/tmp/camcore-open-webui.json").read_text())
           assert set(rendered["services"]) == {"open-webui"}
           service = rendered["services"]["open-webui"]
