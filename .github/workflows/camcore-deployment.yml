@@ -47,6 +47,7 @@ jobs:
         shell: python
         run: |
           import json
+          import re
           from pathlib import Path
 
           expected_image = "ghcr.io/camcoreau/open-webui:camcore-5c31191973557c9ccb94eb0a211ef004eae572ae@sha256:a8cdb5270ce03cd7abfa27030eedff90bbdfc4ebaef2320a5cb0c8553c059330"
@@ -204,6 +205,32 @@ jobs:
           assert "gateway is deployed by `camcoreau/jarvis`" not in runbook.lower()
           assert "ENABLE_RESPONSES_API_STATEFUL=false" in runbook
           assert "store=false" in runbook
+
+          # Operational documents must agree with the production pin. README.md
+          # names only the pinned image; DEPLOYMENT-STATUS.md names the pinned
+          # image plus exactly one rollback image; ROLLBACK.md names only that
+          # rollback image. This stops the runbook and the rollback contract
+          # from drifting behind compose.yaml.
+          image_ref = re.compile(
+              r"ghcr\.io/camcoreau/open-webui:camcore-[0-9a-f]{40}@sha256:[0-9a-f]{64}"
+          )
+          docs = {
+              name: set(image_ref.findall(Path("deploy/camcore", name).read_text()))
+              for name in ("README.md", "DEPLOYMENT-STATUS.md", "ROLLBACK.md")
+          }
+          assert docs["README.md"] == {expected_image}, (
+              f"deploy/camcore/README.md must name only the pinned image; found {sorted(docs['README.md'])}"
+          )
+          assert expected_image in docs["DEPLOYMENT-STATUS.md"], (
+              "deploy/camcore/DEPLOYMENT-STATUS.md must record the pinned image"
+          )
+          rollback_images = docs["DEPLOYMENT-STATUS.md"] - {expected_image}
+          assert len(rollback_images) == 1, (
+              f"deploy/camcore/DEPLOYMENT-STATUS.md must name exactly one rollback image; found {sorted(rollback_images)}"
+          )
+          assert docs["ROLLBACK.md"] == rollback_images, (
+              f"deploy/camcore/ROLLBACK.md must name only the rollback image {sorted(rollback_images)}; found {sorted(docs['ROLLBACK.md'])}"
+          )
 
       - name: Verify required inputs fail closed
         shell: bash
