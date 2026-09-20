@@ -710,6 +710,80 @@ class ResponsesPatchTests(unittest.TestCase):
         self.assertEqual(result['input'][8]['type'], 'message')
         self.assertEqual(result['input'][8]['status'], 'completed')
 
+    def test_drops_stored_reasoning_without_encrypted_content(self) -> None:
+        def stored_turn(reasoning: dict) -> dict:
+            return {
+                'role': 'assistant',
+                'content': '',
+                'output': [
+                    reasoning,
+                    {
+                        'id': 'fc_legacy',
+                        'type': 'function_call',
+                        'status': 'completed',
+                        'call_id': 'call_legacy',
+                        'name': 'get_camcore_health',
+                        'arguments': '{}',
+                    },
+                    {
+                        'id': 'fco_legacy',
+                        'type': 'function_call_output',
+                        'status': 'completed',
+                        'call_id': 'call_legacy',
+                        'output': 'healthy',
+                    },
+                    {
+                        'id': 'msg_legacy',
+                        'type': 'message',
+                        'status': 'completed',
+                        'role': 'assistant',
+                        'content': [{'type': 'output_text', 'text': 'CamCore is healthy.'}],
+                    },
+                ],
+            }
+
+        for legacy_reasoning in (
+            {'id': 'rs_legacy', 'type': 'reasoning', 'status': 'completed', 'summary': []},
+            {'id': 'rs_legacy', 'type': 'reasoning', 'status': 'completed', 'summary': [], 'encrypted_content': ''},
+            {'id': 'rs_legacy', 'type': 'reasoning', 'status': 'completed', 'encrypted_content': None},
+        ):
+            result = self.converter(
+                {
+                    'model': 'gpt-5.6-luna',
+                    'messages': [
+                        {'role': 'user', 'content': 'Check CamCore health'},
+                        stored_turn(legacy_reasoning),
+                    ],
+                }
+            )
+
+            self.assertEqual(
+                [item.get('id') for item in result['input']],
+                [None, 'fc_legacy', 'fco_legacy', 'msg_legacy'],
+            )
+            self.assertNotIn('rs_legacy', json.dumps(result))
+
+        kept = self.converter(
+            {
+                'model': 'gpt-5.6-luna',
+                'messages': [
+                    stored_turn(
+                        {
+                            'id': 'rs_current',
+                            'type': 'reasoning',
+                            'status': 'completed',
+                            'summary': [],
+                            'encrypted_content': 'opaque-current-reasoning',
+                        }
+                    )
+                ],
+            }
+        )
+        self.assertEqual(
+            kept['input'][0],
+            {'id': 'rs_current', 'type': 'reasoning', 'summary': [], 'encrypted_content': 'opaque-current-reasoning'},
+        )
+
     def test_unknown_provider_item_preserves_required_status(self) -> None:
         result = self.converter(
             {

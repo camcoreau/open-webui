@@ -112,6 +112,7 @@ jobs:
           grep -Fq '**_camcore_function_call_linkage(' "$responses_patcher"
           grep -Fq 'enabled=responses_stream_seen' "$responses_patcher"
           grep -Fq 'tool_calls.append(responses_api_tool_calls)' "$responses_patcher"
+          grep -Fq "if item_type == 'reasoning' and not normalized.get('encrypted_content'):" "$responses_patcher"
 
           # Runtime CSS/JS must not depend on the public CamCore website.
           ! grep -Eq 'https?://' "$css"
@@ -192,6 +193,7 @@ jobs:
           grep -Fq "responses_payload['store'] = False" /tmp/camcore-openai.py
           grep -Fq "responses_payload.pop('previous_response_id', None)" /tmp/camcore-openai.py
           grep -Fq "include.append('reasoning.encrypted_content')" /tmp/camcore-openai.py
+          grep -Fq "if item_type == 'reasoning' and not normalized.get('encrypted_content'):" /tmp/camcore-openai.py
           grep -Fq '_attach_camcore_responses_replay(tool_messages, full_output())' \
             /tmp/camcore-middleware.py
           grep -Fq 'and not responses_stream_seen' /tmp/camcore-middleware.py
