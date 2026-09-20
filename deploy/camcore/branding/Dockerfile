@@ -73,6 +73,8 @@ RUN python /tmp/camcore-patch-openai-responses.py \
       /app/backend/open_webui/routers/openai.py \
     && grep -Fq "include.append('reasoning.encrypted_content')" \
       /app/backend/open_webui/routers/openai.py \
+    && grep -Fq "if item_type == 'reasoning' and not normalized.get('encrypted_content'):" \
+      /app/backend/open_webui/routers/openai.py \
     && grep -Fq "_attach_camcore_responses_replay(tool_messages, full_output())" \
       /app/backend/open_webui/utils/middleware.py \
     && grep -Fq "and not responses_stream_seen" \

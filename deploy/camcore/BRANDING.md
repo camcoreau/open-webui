@@ -86,6 +86,9 @@ The visual package lives under `deploy/camcore/branding/`:
 - `camcore-manifest.json` gives installed/home-screen instances the `Jarvis | CamCore AI` name and CamCore application colours.
 - `patch_runtime.py` removes only Open WebUI v0.11.1's automatic custom-name suffix, preserves the surrounding upstream licence notices and points the runtime favicon setting to the bundled local CamCore favicon.
 - `test_patch_runtime.py` verifies that the guarded patch changes only the reviewed identity block and retains both upstream licence notices.
+- `patch_tool_servers.py` keeps local Python plugins disabled while letting authorised global OpenAPI tool servers resolve through Open WebUI's existing external-tool path; `test_patch_tool_servers.py` executes the patched resolver and proves the database lookup stays off and tool-server access control still applies.
+- `patch_openai_responses.py` keeps Responses requests stateless and replays completed provider output, including encrypted reasoning, into tool continuations; `test_patch_openai_responses.py` covers the conversion, replay and wire-boundary behaviour. Stored reasoning items without encrypted content are dropped rather than replayed, because a stateless request cannot resolve them by id.
+- `verify_assets.py` checks the Git blob hash of every raster asset and derives the browser icon set from `favicon.png`.
 - `camcore-mark.svg` is the scalable local connected-core wordmark; raster copies beside it supply browser, touch, and installed-app surfaces.
 - `Dockerfile` layers all branding over the exact approved Open WebUI v0.11.1 image digest.
 
@@ -98,7 +101,7 @@ A branded release is acceptable only when all of the following are true:
 3. the app remains a managed dark experience matching the production CamCore palette;
 4. sidebar, composer, dialogs, menus, toasts, markdown, code and responsive layouts remain legible and usable;
 5. keyboard focus remains clearly visible and reduced-motion preferences are respected;
-6. Microsoft Entra authentication, Ollama connectivity, application roles, networking, persistent data and security hardening are unchanged by the branding image;
+6. Microsoft Entra authentication, the OpenAI Responses connection, the CamCore Operations tool server, application roles, networking, persistent data and security hardening are unchanged by the branding image;
 7. upstream Open WebUI licence and provenance remain bundled and unmodified.
 
 ## Release and deployment sequence

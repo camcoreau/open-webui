@@ -11,7 +11,8 @@ Open WebUI v0.11.1 runtime:
 
 * translate ``reasoning_effort`` without overriding explicit Responses options;
 * force private stateless requests and request ``reasoning.encrypted_content`` once;
-* carry the provider-native output sequence through the internal tool loop; and
+* carry the provider-native output sequence through the internal tool loop,
+  replaying stored reasoning only when it carries encrypted content; and
 * remove that internal replay metadata before Chat Completions requests.
 
 Every replacement is exact-match guarded and idempotent. A partially patched or
@@ -125,6 +126,11 @@ def _normalize_stored_item(item: dict) -> dict | None:
         normalized = {key: value for key, value in item.items() if key in allowed}
         if normalized.get('status') not in RESPONSES_ITEM_STATUSES:
             normalized.pop('status', None)
+        # A stateless request cannot resolve a reasoning item by id. Without its
+        # encrypted content the item carries nothing the provider can use, and
+        # replaying it is rejected rather than ignored.
+        if item_type == 'reasoning' and not normalized.get('encrypted_content'):
+            return None
         return normalized
 
     # Preserve future provider-native item types, but never replay UI metadata.
@@ -643,6 +649,7 @@ def patch_router(target: Path) -> None:
         "'phase'",
         'latest_replay_index',
         "replay_action == 'skip'",
+        "if item_type == 'reasoning' and not normalized.get('encrypted_content'):",
         "'input': _sanitize_responses_input_items(input_items)",
         'def _sanitize_responses_payload_for_send',
         'is_responses=is_responses',

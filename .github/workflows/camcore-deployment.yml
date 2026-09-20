@@ -175,6 +175,7 @@ jobs:
               branding / "patch_openai_responses.py",
               branding / "test_patch_openai_responses.py",
               branding / "patch_tool_servers.py",
+              branding / "test_patch_tool_servers.py",
           ):
               assert path.is_file() and path.stat().st_size > 0, f"missing CamCore asset: {path}"
 
@@ -187,6 +188,7 @@ jobs:
           assert "responses_payload['store'] = False" in responses_patcher
           assert "responses_payload.pop('previous_response_id', None)" in responses_patcher
           assert "include.append('reasoning.encrypted_content')" in responses_patcher
+          assert "if item_type == 'reasoning' and not normalized.get('encrypted_content'):" in responses_patcher
           assert "_attach_camcore_responses_replay" in responses_patcher
           assert "and not responses_stream_seen" in responses_patcher
           assert "**_camcore_function_call_linkage(" in responses_patcher
